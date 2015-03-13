@@ -1,6 +1,6 @@
 import sumpy.io
 import sumpy.system
-from sumpy.simple import lede, textrank, centroid
+from sumpy.simple import lede, textrank, lexrank, centroid
 
 
 
