@@ -9,7 +9,7 @@ setup(
     author_email='kedzie@cs.columbia.edu',
     url='https://github.com/kedz/sumpy',
     install_requires=[
-        'nltk',
+        'nltk', 'numpy', 'scipy', 'scikit-learn',
     ],
 
 )
