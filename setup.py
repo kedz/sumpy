@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 
 setup(
     name = 'sumpy',
@@ -11,6 +12,9 @@ setup(
     install_requires=[
         'nltk', 'numpy', 'scipy', 'scikit-learn',
     ],
+    include_package_data=True,
+    package_data={
+        'sumpy': [os.path.join('data', 'smart_common_words.txt.gz')]},
 
 )
                     
