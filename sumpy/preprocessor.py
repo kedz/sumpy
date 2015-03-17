@@ -1,9 +1,12 @@
 import nltk.data
 from nltk.tokenize import WordPunctTokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+import re
+import gzip
+import pkg_resources
+import os
 
 class SentenceTokenizerMixin(object):
-
     def build_sent_tokenizer(self):
         """Return a function that splits a string into a sequence of 
         sentences."""
@@ -21,6 +24,24 @@ class WordTokenizerMixin(object):
             tokenize = self._word_tokenizer
         else:
             tokenize = WordPunctTokenizer().tokenize
+        return tokenize
+
+
+class ROUGEWordTokenizerMixin(object):
+    def build_word_tokenizer(self):
+        """This mixin provides the same reg-ex based word tokenizer that is
+        used in the official ROUGE perl script (Lin, 2004). See the readText 
+        subroutine (line 1816) of ROUGE-1.5.5.pl for reference."""
+        if self._word_tokenizer is not None:
+            tokenize = self._word_tokenizer
+        else:
+            def rouge_tokenize(sentence):                  
+                s = re.sub(r"-", r" -", sentence, flags=re.UNICODE)
+                s = re.sub(r"[^A-Za-z0-9\-]", r" ", s, flags=re.UNICODE) 
+                s = s.strip()
+                s = re.sub(r"\s+", r" ", s, flags=re.UNICODE)
+                return s.split(u" ") 
+            tokenize = rouge_tokenize
         return tokenize
 
 class CorpusTfidfMixin(object):
@@ -63,4 +84,17 @@ class TextAnalyzerMixin(object):
             return self._stemmer
         else: return lambda w: w
 
-
+class SMARTStopWordsMixin(object):
+    def build_stopwords(self):
+        if self.remove_stopwords is True:
+            if self._stopwords is None:             
+                path = pkg_resources.resource_filename(
+                    "sumpy", 
+                    os.path.join("data", "smart_common_words.txt.gz"))
+                with gzip.open(path, u"r") as f:
+                    self._stopwords = set(
+                        [word.strip().decode(u"utf-8").lower()
+                         for word in f.readlines()])
+            return lambda word: word in self._stopwords
+        else:
+            return lambda word: False
