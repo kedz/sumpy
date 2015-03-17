@@ -5,6 +5,9 @@ def load_duc_docset(input_source):
     docs = DucSgmlReader().read(input_source)
     return docs
 
+def load_duc_abstractive_summaries(input_source):
+    models = DucAbstractSgmlReader().read(input_source)
+    return models
 
 class FileInput(object):
 
@@ -42,6 +45,21 @@ class DucSgmlReader(FileInput):
                 m = re.search(r"<TEXT>(.*?)</TEXT>", sgml, flags=re.DOTALL)
                 if m is None:
                     raise Exception("TEXT not found in " + path)
+                text = m.group(1).strip()
+                #Document(path, text)
+                docs.append(text)            #(Document(path, text))
+        return docs
+
+class DucAbstractSgmlReader(FileInput):
+
+    def read(self, input_source):
+        docs = []
+        for path in self.gather_paths(input_source):
+            with open(path, u"r") as f:
+                sgml = "".join(f.readlines())
+                m = re.search(r"<SUM[^>]+>(.*?)</SUM>", sgml, flags=re.DOTALL)
+                if m is None:
+                    raise Exception("SUM not found in " + path)
                 text = m.group(1).strip()
                 #Document(path, text)
                 docs.append(text)            #(Document(path, text))
