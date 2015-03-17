@@ -6,13 +6,15 @@ import pandas as pd
 class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin, 
             SMARTStopWordsMixin):
     def __init__(self, sentence_tokenizer=None, word_tokenizer=None, 
-                 max_ngrams=2, remove_stopwords=False, stopwords=None):
+                 max_ngrams=2, remove_stopwords=False, stopwords=None,
+                 show_per_model_results=False):
         
         self._sentence_tokenizer = sentence_tokenizer
         self._word_tokenizer = word_tokenizer
         self._max_ngrams = max_ngrams
         self.remove_stopwords = remove_stopwords
         self._stopwords = stopwords
+        self._show_per_model_results = show_per_model_results
 
     def evaluate(self, systems, models):
         models = list(models) # make model order consistent
@@ -35,6 +37,8 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
                 result_index.append((name, model_no))
                 results.append(scores)
 
+        # Collect results as a pandas DataFrame and compute the mean 
+        # performance.
         col_index = []
         dataframe_cols = []
         for i in xrange(1, self._max_ngrams + 1):
@@ -47,20 +51,22 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
             result_index, names=['system', 'model'])
         col_index = pd.MultiIndex.from_tuples(col_index)
         df = pd.DataFrame(results, columns=col_index, index=row_index)
+        df2 = df.groupby(level=0).mean()
+        if self._show_per_model_results is True:
+            df2['model'] = 'AVG'
+            df2 = df2.reset_index().set_index(['system','model']).append(df)
+            df2 = df2.sort()
         
-        return df
+        return df2
 
     def extract_ngrams(self, text, sent_tokenizer, word_tokenizer, max_ngrams,
             is_stopword):
         ngram_sets = {}
         sents = sent_tokenizer(text)
         
-        #sents = [[word.lower() for word in word_tokenizer(sent)]
-        #            for sent in sents]
         tokens = []
         for sent in sents:
             tokens.extend([word.lower() for word in word_tokenizer(sent)])
-
 
         # Remove stopwords.
         tokens = [word for word in tokens if is_stopword(word) is False]
@@ -68,8 +74,6 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
         for i in xrange(1, max_ngrams + 1):
             ngram_sets[i] = {}
             total = 0
-            #for sent in sents:
-            #for ngram in ngrams(sent, i):
             for ngram in ngrams(tokens, i):
                 ngram_sets[i][ngram] = ngram_sets[i].get(ngram, 0) + 1
                 total += 1
@@ -77,7 +81,6 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
         return ngram_sets
                       
     def compute_prf(self, sys_ngram_sets, model_ngram_sets, max_ngrams):
-       # scores = {}
         scores = []
         for i in xrange(1, max_ngrams + 1):
             intersect = 0
@@ -88,16 +91,9 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
                 intersect += min(model_ngram_count, sys_ngram_count)
             recall = float(intersect) / model_ngram_sets[i][u"__TOTAL__"]
             prec = float(intersect) / sys_ngram_sets[i][u"__TOTAL__"]
-            #intersect = sys_ngram_sets[i].intersection(model_ngram_sets[i])
-            #n_intersect = len(intersect)
-            #recall = float(n_intersect) / len(model_ngram_sets[i])
-            #prec = float(n_intersect) / len(sys_ngram_sets[i])
             f1 = 2 * prec * recall / (prec + recall)
             scores.append(recall)
             scores.append(prec)
             scores.append(f1)
-            #scores[u"ROUGE-{} Recall".format(i)] = recall
-            #scores[u"ROUGE-{} Prec.".format(i)] = prec
-            #scores[u"ROUGE-{} F1".format(i)] = f1
             
         return scores
