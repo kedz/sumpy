@@ -32,6 +32,24 @@ class Summary(WordTokenizerMixin):
         return unicode(self).encode(u"utf-8")
 
 
+    def to_spl(self, length=200, encoding=None):
+        size = 0
+        sents = []
+        for sent in self._df[u"text"].tolist():
+            size += len(self._tokenize(sent))
+            sents.append(sent)
+            if size >= length:
+                break
+                    
+        psents = [self._pretty_sent(sent)
+                  for sent in sents]
+        if encoding is not None:
+            return u"\n".join(psents).encode(encoding)
+        else:
+            return u"\n".join(psents)
+
+
+
 
 class Document(object):
     def __init__(self, name, text):
