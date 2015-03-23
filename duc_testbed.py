@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 import os
 import sumpy
-import sumpy.rouge
+import sumpy.eval
 
 def load_docsets(duc_dir):
 
@@ -30,7 +30,7 @@ def load_docset(docset_path):
 
 
 def generate_summaries(systems, docsets):
-    rouge = sumpy.rouge.ROUGE(max_ngrams=2, limit=100, limit_type=u"word")
+    rouge = sumpy.eval.ROUGE(max_ngrams=2, limit=100, limit_type=u"word")
     results = []
     for docset_id in docsets.keys():
         #print docset_id
