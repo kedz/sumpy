@@ -98,3 +98,29 @@ class SMARTStopWordsMixin(object):
             return lambda word: word in self._stopwords
         else:
             return lambda word: False
+
+class LengthLimiterMixin(object):
+    def build_length_limiter(self):
+        """
+            Return a function that shortens a list of tokens to a 
+            desired length.
+        """
+        if self._limit is None and self._limit_type is not None:
+            raise Exception("Both limit and limit_type must be set.")
+        if self._limit is not None and self._limit_type is None:
+            raise Exception("Both limit and limit_type must be set.")
+        if self._limit_type not in [None, u"word"]:
+            raise Exception(
+                "limit_type: {} not implemented.".format(self._limit_type))
+        
+        if self._limit_type is None:
+            # Do not shorten, just return tokens unchanged.
+            return lambda x: x
+        if self._limit_type == u"word":
+            # Shorten list to be `_limit` tokens long.
+            def word_limiter(sequence):
+                if len(sequence) < self._limit:
+                    print "Warning: document is shorter than the max length" \
+                          + " limit. This can effect evaluation negatively."
+                return sequence[:self._limit]
+            return word_limiter

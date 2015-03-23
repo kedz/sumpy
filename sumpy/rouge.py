@@ -1,37 +1,40 @@
 from nltk.util import ngrams
 from sumpy.preprocessor import (SentenceTokenizerMixin, 
-    ROUGEWordTokenizerMixin, SMARTStopWordsMixin)
+    ROUGEWordTokenizerMixin, SMARTStopWordsMixin, LengthLimiterMixin)
 import pandas as pd
 
 class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin, 
-            SMARTStopWordsMixin):
+            SMARTStopWordsMixin, LengthLimiterMixin):
     def __init__(self, sentence_tokenizer=None, word_tokenizer=None, 
                  max_ngrams=2, remove_stopwords=False, stopwords=None,
-                 show_per_model_results=False):
-        
+                 show_per_model_results=False, limit=None, limit_type=None):
+
         self._sentence_tokenizer = sentence_tokenizer
         self._word_tokenizer = word_tokenizer
         self._max_ngrams = max_ngrams
         self.remove_stopwords = remove_stopwords
         self._stopwords = stopwords
         self._show_per_model_results = show_per_model_results
+        self._limit = limit
+        self._limit_type = limit_type
 
     def evaluate(self, systems, models):
         models = list(models) # make model order consistent
         sent_tokenizer = self.build_sent_tokenizer()
         word_tokenizer = self.build_word_tokenizer()
+        length_limiter = self.build_length_limiter()
         is_stopword = self.build_stopwords()
         results = []
         result_index = []
         for name, system in systems:
             sys_ngram_sets = self.extract_ngrams(
                 system, sent_tokenizer, word_tokenizer, self._max_ngrams,
-                    is_stopword)
+                    is_stopword, length_limiter)
 
             for model_no, model in enumerate(models, 1):
                 model_ngram_sets = self.extract_ngrams(
                     model, sent_tokenizer, word_tokenizer, self._max_ngrams,
-                    is_stopword)
+                    is_stopword, length_limiter)
                 scores = self.compute_prf(
                     sys_ngram_sets, model_ngram_sets, self._max_ngrams)
                 result_index.append((name, model_no))
@@ -60,17 +63,18 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
         return df2
 
     def extract_ngrams(self, text, sent_tokenizer, word_tokenizer, max_ngrams,
-            is_stopword):
+            is_stopword, length_limiter):
         ngram_sets = {}
         sents = sent_tokenizer(text)
         
         tokens = []
         for sent in sents:
             tokens.extend([word.lower() for word in word_tokenizer(sent)])
-
+        
         # Remove stopwords.
         tokens = [word for word in tokens if is_stopword(word) is False]
-        
+        tokens = length_limiter(tokens)
+
         for i in xrange(1, max_ngrams + 1):
             ngram_sets[i] = {}
             total = 0
