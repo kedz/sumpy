@@ -46,8 +46,8 @@ class DucSgmlReader(FileInput):
                 if m is None:
                     raise Exception("TEXT not found in " + path)
                 text = m.group(1).strip()
-                #Document(path, text)
-                docs.append(text)            #(Document(path, text))
+                text_clean = re.sub(r"<[^>]*?>", r"", text)
+                docs.append(text_clean)
         return docs
 
 class DucAbstractSgmlReader(FileInput):
@@ -61,6 +61,5 @@ class DucAbstractSgmlReader(FileInput):
                 if m is None:
                     raise Exception("SUM not found in " + path)
                 text = m.group(1).strip()
-                #Document(path, text)
-                docs.append(text)            #(Document(path, text))
+                docs.append(text)
         return docs
