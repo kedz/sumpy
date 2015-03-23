@@ -91,7 +91,12 @@ class ROUGE(SentenceTokenizerMixin, ROUGEWordTokenizerMixin,
                 intersect += min(model_ngram_count, sys_ngram_count)
             recall = float(intersect) / model_ngram_sets[i][u"__TOTAL__"]
             prec = float(intersect) / sys_ngram_sets[i][u"__TOTAL__"]
-            f1 = 2 * prec * recall / (prec + recall)
+
+            if intersect == 0: 
+                print "Warning: 0 {}-gram overlap".format(i)
+                f1 = 0
+            else:
+                f1 = 2 * prec * recall / (prec + recall)
             scores.append(recall)
             scores.append(prec)
             scores.append(f1)
