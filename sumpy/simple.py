@@ -16,4 +16,6 @@ def centroid(inputs):
     s = sumpy.system.CentroidSummarizer()
     return s.summarize(inputs)
 
-
+def dems(inputs):
+    s = sumpy.system.DEMSSummarizer()
+    return s.summarize(inputs)
