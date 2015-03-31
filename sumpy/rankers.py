@@ -3,6 +3,50 @@ from itertools import combinations
 from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 
+class DEMSRankerMixin(object):
+    def demsrank(self, input_df, lead_word_weight=1, verb_spec_weight=1):
+        lead_path = pkg_resources.resource_filename("sumpy", 
+                        os.path.join("data", "lead_words.txt"))
+        self._leadwords = []
+        with gzip.open(lead_path, u"r") as f:
+            text = f.readlines()
+            for line in text:
+                line_split = line.split()
+                self.lead_words.append(line_split[0])
+        verb_path = pkg_resources.resource_filename("sumpy", 
+                        os.path.join("data", "verb_specificity.txt"))
+        self._verbspec = {}
+        with gzip.open(verb_path, u"r") as f:
+            text = f.readlines()
+            for line in text:
+                line_split = line.split()
+                self.verbspec[line_split[0]] = line_split[1]
+
+        lead_score = np.zeros(input_df.size)
+        verb_score = np.zeros(input_df.size)
+        for i in range(0, input_df.size):
+            lead_score[i] = _get_lead_values(input_df['text'][i])
+            verb_score[i] = _get_verb_specificity(input_df['text'][i])
+        lead_score = lead_score / np.amax(lead_score)
+        verb_score = verb_score / np.amax(verb_score)
+        input_df[u"rank:demsrank"] = lead_score + verb_score
+
+    def _get_lead_values(sent):
+        word_count = 0
+        lead_word_count = 0
+        for token in sent:
+            word_count = word_count + 1
+            if token in self._leadwords:
+                lead_word_count = lead_word_count + 1
+        return float(lead_word_count) / word_count
+
+    def _get_verb_specificity(sent):
+        max_val = 0
+        for token in sent:
+            if token in self._verbspec.keys() and float(self._verbspec[token]) > max_val:
+                max_val = float(self._verbspec[token])
+        return max_val
+
 class LedeRankerMixin(object):
     def rank_by_lede(self, input_df):
         input_df[u"rank:lede"] = 0
