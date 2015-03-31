@@ -15,7 +15,8 @@ setup(
     include_package_data=True,
     package_data={
         'sumpy': [os.path.join('data', 'smart_common_words.txt.gz'),
-                  os.path.join('data', 'verb_specificity.txt')]},
+                  os.path.join('data', 'verb_specificity.txt'),
+                  os.path.join('data', 'lead_words.txt')]},
 
 )
                     
