@@ -1,7 +1,7 @@
 from sumpy.preprocessor import (SentenceTokenizerMixin, WordTokenizerMixin,
     CorpusTfidfMixin)
 from sumpy.rankers import (LedeRankerMixin, TextRankMixin, LexRankMixin, 
-    CentroidScoreMixin)
+    CentroidScoreMixin, DEMSRankerMixin)
 from sumpy.document import Summary
 import pandas as pd
 
