@@ -18,7 +18,7 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
 
         sents = []
         for doc_no, doc in enumerate(docs, 1):
-            for sent_no, sent in enumerate(docs, 1):
+            for sent_no, sent in enumerate(doc, 1):
                 words = word_tokenize(sent)
                 sents.append({"doc": doc_no, "doc position": sent_no, 
                     "text": sent, "words": words})
