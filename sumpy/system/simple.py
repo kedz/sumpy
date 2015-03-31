@@ -5,6 +5,30 @@ from sumpy.rankers import (LedeRankerMixin, TextRankMixin, LexRankMixin,
 from sumpy.document import Summary
 import pandas as pd
 
+class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin, 
+                        DEMSRankerMixin):
+    def __init__(self, sentence_tokenizer=None, word_tokenizer=None):
+        self._sentence_tokenizer = sentence_tokenizer
+        self._word_tokenizer = word_tokenizer
+
+    def summarize(self, docs):
+        sent_tokenize = self.build_sent_tokenizer()
+        word_tokenize = self.build_word_tokenizer()
+        docs = [sent_tokenize(doc) for doc in docs]
+
+        sents = []
+        for doc_no, doc in enumerate(docs, 1):
+            for sent_no, sent in enumerate(docs, 1):
+                words = word_tokenize(sent)
+                sents.append({"doc": doc_no, "doc position": sent_no, 
+                    "text": sent, "words": words})
+        input_df = pd.DataFrame(sents, 
+                                columns = ["doc", "doc position", "text",
+                                            "words", "rank:demsrank"])
+        self.demsrank(input_df)
+        input_df.sort(["rank:demsrank"], inplace=True, ascending=False)
+        return Summary(input_df)
+
 class LedeSummarizer(SentenceTokenizerMixin, LedeRankerMixin):
     def __init__(self, sentence_tokenizer=None):
         self._sentence_tokenizer = sentence_tokenizer
