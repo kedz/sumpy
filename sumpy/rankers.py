@@ -6,6 +6,12 @@ import pkg_resources
 import os
 import re
 
+class LocationMixin(object):
+    def locationrank(self, input_df):
+        ranks = input_df['doc position']
+        ranks = [1 - (rank * 1.0 / np.amax(ranks)) for rank in ranks]
+        input_df[u'rank:location'] = ranks
+
 class CountPronounsMixin(object):
     def countpronounsrank(self, input_df):
         counts = np.zeros(len(input_df.index))
@@ -13,10 +19,10 @@ class CountPronounsMixin(object):
             sent = input_df['pos'][i]
             count = 0
             for pos in sent:
-                if pos == 'PRP':
+                if pos[:2] == 'PR':
                     count = count + 1
             counts[i] = count
-        counts = counts / np.amax(counts)
+        counts = counts * 1.0 / np.amax(counts)
         counts = 1 - counts
         input_df[u'rank:countpronoun'] = counts
 
@@ -36,7 +42,7 @@ class SentLengthMixin(object):
             else: 
                 length = 0
             lengths[i] = length
-        lengths = lengths / np.amax(lengths)
+        lengths = lengths * 1.0 / np.amax(lengths)
         lengths = 1 - lengths
         input_df[u'rank:sentlength'] = lengths
 
@@ -89,17 +95,21 @@ class VerbSpecificityMixin(object):
         return max_val
 
 class DEMSRankerMixin(LeadValuesMixin, VerbSpecificityMixin,
-                      CountPronounsMixin, SentLengthMixin):
+                      CountPronounsMixin, SentLengthMixin, 
+                      LocationMixin):
     def demsrank(self, input_df, lead_word_weight=1, verb_spec_weight=1,
-                count_pronoun_weight=1, sent_length_weight=1):
+                count_pronoun_weight=1, sent_length_weight=1,
+                location_weight=1):
         self.leadvaluesrank(input_df)
         self.verbspecificityrank(input_df)
         self.countpronounsrank(input_df)
         self.sentlengthrank(input_df)
+        self.locationrank(input_df)
         input_df[u"rank:demsrank"] = lead_word_weight * input_df[u'rank:leadvalue'] \
             + verb_spec_weight * input_df[u'rank:verbspec'] \
             + count_pronoun_weight * input_df[u'rank:countpronoun'] \
-            + sent_length_weight * input_df[u'rank:sentlength']
+            + sent_length_weight * input_df[u'rank:sentlength'] \
+            + location_weight * input_df['rank:location']
 
 class LedeRankerMixin(object):
     def rank_by_lede(self, input_df):
