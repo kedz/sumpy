@@ -4,14 +4,15 @@ from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 import pkg_resources
 import os
+import re
 
 class CountPronounsMixin(object):
     def countpronounsrank(self, input_df):
         counts = np.zeros(len(input_df.index))
         for i in range(0, len(input_df['pos'])):
-            sent = input_df[i]
+            sent = input_df['pos'][i]
             count = 0
-            for word in sent
+            for pos in sent:
                 if pos == 'PRP':
                     count = count + 1
             counts[i] = count
@@ -24,15 +25,15 @@ class SentLengthMixin(object):
         lengths = np.zeros(len(input_df.index))
         for i in range(0, len(input_df['pos'])):
             length = 0
-            for j in range(0, len(input_df['pos'][i]))
+            for j in range(0, len(input_df['pos'][i])):
                 pos = input_df['pos'][i][j]
                 if re.match("^[A-Za-z]*$", pos) and not(pos == 'CD'): 
                     length = length + 1
             if length > 30:
                 length = length - 30
-            else if length < 15:
+            elif length < 15:
                 length = 15 - length
-            else 
+            else: 
                 length = 0
             lengths[i] = length
         lengths = lengths / np.amax(lengths)
@@ -96,8 +97,8 @@ class DEMSRankerMixin(LeadValuesMixin, VerbSpecificityMixin,
         self.countpronounsrank(input_df)
         self.sentlengthrank(input_df)
         input_df[u"rank:demsrank"] = lead_word_weight * input_df[u'rank:leadvalue'] \
-            + verb_spec_weight * input_df[u'rank:verbspec']
-            + count_pronoun_weight * input_df[u'rank:countpronoun']
+            + verb_spec_weight * input_df[u'rank:verbspec'] \
+            + count_pronoun_weight * input_df[u'rank:countpronoun'] \
             + sent_length_weight * input_df[u'rank:sentlength']
 
 class LedeRankerMixin(object):
