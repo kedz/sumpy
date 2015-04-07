@@ -1,10 +1,43 @@
 import nltk.data
 from nltk.tokenize import WordPunctTokenizer
+from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 import gzip
 import pkg_resources
 import os
+
+class NamedEntityRecogMixin(object):
+    def build_named_entity_recog(self):
+        """Return a funcion that returns a tree with 
+        named entities recognized in subtrees"""
+        if self._named_entity_recog is not None:
+            ne = self._named_entity_recog
+        else: 
+            ne = nltk.ne_chunk
+        return ne
+
+class WordLemmatizerMixin(object):
+    def build_word_lemmatizer(self):
+        """Return a function that lemmatizes a word
+        given a word and its pos."""
+        if self._word_lemmatizer is not None:
+            lem = self._word_lemmatizer
+        else:
+            wordnet_lemmatizer = WordNetLemmatizer()
+            lem = wordnet_lemmatizer.lemmatize
+        return lem
+
+class PosTaggerMixin(object):
+    def build_pos_tag(self):
+        """Return a function that returns the part of
+        speech of a given tokenized word sentence"""
+        if self._pos_tag is not None:
+            pos = self._pos_tag
+        else: 
+            pos = nltk.pos_tag
+#data.load('taggers/maxent_treebank_pos_tagger/english.pickle').pos_tag
+        return pos
 
 class SentenceTokenizerMixin(object):
     def build_sent_tokenizer(self):
