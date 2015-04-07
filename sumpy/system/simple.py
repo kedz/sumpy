@@ -6,6 +6,7 @@ from sumpy.rankers import (LedeRankerMixin, TextRankMixin, LexRankMixin,
 from sumpy.document import Summary
 import pandas as pd
 from nltk.corpus import wordnet
+import nltk
 
 class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin, 
                       PosTaggerMixin, WordLemmatizerMixin,
@@ -31,9 +32,10 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
         for doc_no, doc in enumerate(docs, 1):
             for sent_no, sent in enumerate(doc, 1):
                 words = word_tokenize(sent)
-                pos = pos_tag(words)
+                words_pos = pos_tag(words)
                 lem = []
-                for word_pos in pos:
+                pos = []
+                for word_pos in words_pos:
                     word = word_pos[0]
                     old_pos = word_pos[1][:2]
                     morph_tag = {'NN':wordnet.NOUN,'JJ':wordnet.ADJ,
@@ -42,15 +44,26 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
                     if old_pos in morph_tag:
                         new_pos = morph_tag[old_pos]
                     word_lem = word_lemmatizer(word, new_pos)
-                    lem.append((word, word_lem))
-                ne = named_entity_recog(pos, binary=True)
+                    pos.append(old_pos)
+                    lem.append(word_lem)
+                tree_ne = named_entity_recog(words_pos, binary=True)
+                ne = []
+                for i in range(0, len(tree_ne)):
+                    if isinstance(tree_ne[i], nltk.tree.Tree):
+                        ne.append(True)
+                    else:
+                        ne.append(False)
                 sents.append({"doc": doc_no, "doc position": sent_no, 
                     "text": sent, "words": words, "pos": pos, "lem": lem,
                     "ne": ne})
         input_df = pd.DataFrame(sents, 
                                 columns = ["doc", "doc position", "text",
                                             "words", "pos", "lem", "ne",
-                                            "rank:demsrank"])
+                                            "rank:demsrank", "rank:verbspec", 
+                                            "rank:leadvalue",
+                                            "rank:countpronoun",
+                                            "rank:sentlength",
+                                            "rank:location", ])
         self.demsrank(input_df)
         input_df.sort(["rank:demsrank"], inplace=True, ascending=False)
         return Summary(input_df)
