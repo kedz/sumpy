@@ -1,30 +1,56 @@
 from sumpy.preprocessor import (SentenceTokenizerMixin, WordTokenizerMixin,
+    PosTaggerMixin, WordLemmatizerMixin, NamedEntityRecogMixin,
     CorpusTfidfMixin)
 from sumpy.rankers import (LedeRankerMixin, TextRankMixin, LexRankMixin, 
     CentroidScoreMixin, DEMSRankerMixin)
 from sumpy.document import Summary
 import pandas as pd
+from nltk.corpus import wordnet
 
 class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin, 
-                        DEMSRankerMixin):
-    def __init__(self, sentence_tokenizer=None, word_tokenizer=None):
+                      PosTaggerMixin, WordLemmatizerMixin,
+                      NamedEntityRecogMixin, DEMSRankerMixin):
+    def __init__(self, sentence_tokenizer=None, word_tokenizer=None,
+                 pos_tagger=None, word_lemmatizer=None, 
+                 named_entity_recog=None):
         self._sentence_tokenizer = sentence_tokenizer
         self._word_tokenizer = word_tokenizer
+        self._pos_tag = pos_tagger
+        self._word_lemmatizer = word_lemmatizer
+        self._named_entity_recog = named_entity_recog
 
     def summarize(self, docs):
         sent_tokenize = self.build_sent_tokenizer()
         word_tokenize = self.build_word_tokenizer()
+        pos_tag = self.build_pos_tag()
+        word_lemmatizer = self.build_word_lemmatizer()
+        named_entity_recog = self.build_named_entity_recog()
         docs = [sent_tokenize(doc) for doc in docs]
 
         sents = []
         for doc_no, doc in enumerate(docs, 1):
             for sent_no, sent in enumerate(doc, 1):
                 words = word_tokenize(sent)
+                pos = pos_tag(words)
+                lem = []
+                for word_pos in pos:
+                    word = word_pos[0]
+                    old_pos = word_pos[1][:2]
+                    morph_tag = {'NN':wordnet.NOUN,'JJ':wordnet.ADJ,
+                                 'VB':wordnet.VERB,'RB':wordnet.ADV}
+                    new_pos = wordnet.NOUN
+                    if old_pos in morph_tag:
+                        new_pos = morph_tag[old_pos]
+                    word_lem = word_lemmatizer(word, new_pos)
+                    lem.append((word, word_lem))
+                ne = named_entity_recog(pos, binary=True)
                 sents.append({"doc": doc_no, "doc position": sent_no, 
-                    "text": sent, "words": words})
+                    "text": sent, "words": words, "pos": pos, "lem": lem,
+                    "ne": ne})
         input_df = pd.DataFrame(sents, 
                                 columns = ["doc", "doc position", "text",
-                                            "words", "rank:demsrank"])
+                                            "words", "pos", "lem", "ne",
+                                            "rank:demsrank"])
         self.demsrank(input_df)
         input_df.sort(["rank:demsrank"], inplace=True, ascending=False)
         return Summary(input_df)
