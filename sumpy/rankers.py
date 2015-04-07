@@ -5,9 +5,43 @@ from sklearn.metrics.pairwise import cosine_similarity
 import pkg_resources
 import os
 
-class DEMSRankerMixin(object):
-    def demsrank(self, input_df, lead_word_weight=1, verb_spec_weight=1):
-        lead_path = pkg_resources.resource_filename("sumpy", 
+class CountPronounsMixin(object):
+    def countpronounsrank(self, input_df):
+        counts = np.zeros(len(input_df.index))
+        for i in range(0, len(input_df['pos'])):
+            sent = input_df[i]
+            count = 0
+            for word in sent
+                if pos == 'PRP':
+                    count = count + 1
+            counts[i] = count
+        counts = counts / np.amax(counts)
+        counts = 1 - counts
+        input_df[u'rank:countpronoun'] = counts
+
+class SentLengthMixin(object):
+    def sentlengthrank(self, input_df):
+        lengths = np.zeros(len(input_df.index))
+        for i in range(0, len(input_df['pos'])):
+            length = 0
+            for j in range(0, len(input_df['pos'][i]))
+                pos = input_df['pos'][i][j]
+                if re.match("^[A-Za-z]*$", pos) and not(pos == 'CD'): 
+                    length = length + 1
+            if length > 30:
+                length = length - 30
+            else if length < 15:
+                length = 15 - length
+            else 
+                length = 0
+            lengths[i] = length
+        lengths = lengths / np.amax(lengths)
+        lengths = 1 - lengths
+        input_df[u'rank:sentlength'] = lengths
+
+class LeadValuesMixin(object):
+    def leadvaluesrank(self, input_df):
+        lead_path =  pkg_resources.resource_filename("sumpy", 
                         os.path.join("data", "lead_words.txt"))
         self._leadwords = []
         with open(lead_path, u"r") as f:
@@ -15,23 +49,11 @@ class DEMSRankerMixin(object):
             for line in text:
                 line_split = line.split()
                 self._leadwords.append(line_split[0])
-        verb_path = pkg_resources.resource_filename("sumpy", 
-                        os.path.join("data", "verb_specificity.txt"))
-        self._verbspec = {}
-        with open(verb_path, u"r") as f:
-            text = f.readlines()
-            for line in text:
-                line_split = line.split()
-                self._verbspec[line_split[0]] = line_split[1]
-
         lead_score = np.zeros(len(input_df.index))
-        verb_score = np.zeros(len(input_df.index))
         for i in range(0, len(input_df.index)):
-            lead_score[i] = self._get_lead_values(input_df['text'][i])
-            verb_score[i] = self._get_verb_specificity(input_df['text'][i])
+            lead_score[i] = self._get_lead_values(input_df['lem'][i])
         lead_score = lead_score / np.amax(lead_score)
-        verb_score = verb_score / np.amax(verb_score)
-        input_df[u"rank:demsrank"] = lead_score + verb_score
+        input_df[u'rank:leadvalue'] = lead_score
 
     def _get_lead_values(self, sent):
         word_count = 0
@@ -42,12 +64,41 @@ class DEMSRankerMixin(object):
                 lead_word_count = lead_word_count + 1
         return float(lead_word_count) / word_count
 
-    def _get_verb_specificity(self, sent):
+class VerbSpecificityMixin(object):
+    def verbspecificityrank(self, input_df):
+        verb_path = pkg_resources.resource_filename("sumpy", 
+                        os.path.join("data", "verb_specificity.txt"))
+        self._verbspec = {}
+        with open(verb_path, u"r") as f:
+            text = f.readlines()
+            for line in text:
+                line_split = line.split()
+                self._verbspec[line_split[0]] = line_split[1]
+        verb_score = np.zeros(len(input_df.index))
+        for i in range(0, len(input_df.index)):
+            verb_score[i] = self._get_verb_specificity(input_df['lem'][i], input_df['pos'][i])
+        verb_score = verb_score / np.amax(verb_score)
+        input_df[u'rank:verbspec'] = verb_score
+
+    def _get_verb_specificity(self, sent, pos):
         max_val = 0
-        for token in sent:
-            if token in self._verbspec.keys() and float(self._verbspec[token]) > max_val:
+        for i, token in enumerate(sent):
+            if pos[i][:2] == 'VB' and token in self._verbspec.keys() and float(self._verbspec[token]) > max_val:
                 max_val = float(self._verbspec[token])
         return max_val
+
+class DEMSRankerMixin(LeadValuesMixin, VerbSpecificityMixin,
+                      CountPronounsMixin, SentLengthMixin):
+    def demsrank(self, input_df, lead_word_weight=1, verb_spec_weight=1,
+                count_pronoun_weight=1, sent_length_weight=1):
+        self.leadvaluesrank(input_df)
+        self.verbspecificityrank(input_df)
+        self.countpronounsrank(input_df)
+        self.sentlengthrank(input_df)
+        input_df[u"rank:demsrank"] = lead_word_weight * input_df[u'rank:leadvalue'] \
+            + verb_spec_weight * input_df[u'rank:verbspec']
+            + count_pronoun_weight * input_df[u'rank:countpronoun']
+            + sent_length_weight * input_df[u'rank:sentlength']
 
 class LedeRankerMixin(object):
     def rank_by_lede(self, input_df):
