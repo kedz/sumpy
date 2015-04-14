@@ -29,6 +29,11 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
         docs = [sent_tokenize(doc) for doc in docs]
 
         sents = []
+
+        all_ne = {"GPE":{}, "ORGANIZTION":{}, "PERSON":{}}
+        max_count = 0
+        max_ne = ""
+        
         for doc_no, doc in enumerate(docs, 1):
             for sent_no, sent in enumerate(doc, 1):
                 words = word_tokenize(sent)
@@ -46,11 +51,26 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
                     word_lem = word_lemmatizer(word, new_pos)
                     pos.append(old_pos)
                     lem.append(word_lem)
-                tree_ne = named_entity_recog(words_pos, binary=True)
+                tree_ne = named_entity_recog(words_pos, binary=False)
                 ne = []
                 for i in range(0, len(tree_ne)):
                     if isinstance(tree_ne[i], nltk.tree.Tree):
                         ne.append(True)
+                        if not(tree_ne[i]._label in all_ne.keys()):
+                            all_ne[tree_ne[i]._label] = {}
+                        dic_ne = all_ne[tree_ne[i]._label]
+                        name = ""
+                        for j in range(0, len(tree_ne[i])):
+                            if name != "":
+                                name += " "
+                            name += tree_ne[i][j][0]
+                        if name in dic_ne.keys():
+                            dic_ne[name] += 1
+                        else:
+                             dic_ne[name] = 1
+                        if dic_ne[name] > max_count:
+                            max_count = dic_ne[name]
+                            max_ne = name 
                     else:
                         ne.append(False)
                 sents.append({"doc": doc_no, "doc position": sent_no, 
@@ -63,8 +83,9 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
                                             "rank:leadvalue",
                                             "rank:countpronoun",
                                             "rank:sentlength",
-                                            "rank:location", ])
+                                            "rank:location", "rank:concept"])
         self.demsrank(input_df)
+        print max_ne
         input_df.sort(["rank:demsrank"], inplace=True, ascending=False)
         return Summary(input_df)
 
