@@ -5,7 +5,65 @@ from sklearn.metrics.pairwise import cosine_similarity
 import pkg_resources
 import os
 import re
+import sys
+#Rona should do something about this - put in setup?
+sys.path.append(os.path.abspath("/proj/nlp/users/Rona/DEMS/lib/pywsd"))
+from pywsd import disambiguate
 
+class ConceptMixin(object):
+    def conceptrank(self, input_df):
+        #initialize counts
+        self.synsets = []
+        self.concept_sets = []
+        self.concept_sizes = []
+        self.binary_concepts = []
+        #Go through all sent
+        for i, sent in enumerate(input_df['text']):
+            self.binary_concepts.append(np.zeros(len(self.concept_sets)))
+            self.synsets.append(disambiguate(sent))
+            #Go through each word with synset
+            for sent_synset in self.synsets[i]:
+                if sent_synset[1]:
+                    found = False
+                    #See if its part of an existing concept
+                    for j, existing_concept in enumerate(self.concept_sets):
+                        if sent_synset[1] in existing_concept: 
+                            self.binary_concepts[i][j] = 1
+                            self.concept_sizes[j] += 1
+                            found = True
+                    #If not, add a new concept
+                    if not found:
+                        #Create concept from hyper/hyponyms
+                        sent_hypo = sent_synset[1].hyponyms()
+                        sent_hyper = sent_synset[1].hypernyms()
+                        new_concept = sent_hypo + [sent_synset[1]]
+                        new_concept.extend(sent_hyper)
+                        self.concept_sets.append(new_concept)
+                        self.binary_concepts[i] = np.append(self.binary_concepts[i],1)
+                        self.concept_sizes.append(1)
+        #Go through each sent's words against
+        for i,sent in enumerate(input_df['text']):
+            for sent_synset in self.synsets[i]:
+                if sent_synset[1]:
+                    #See if the words appear in the newly appended
+                    #concepts
+                    for j in range(len(self.binary_concepts[i]),
+                         len(self.concept_sets)):
+                         if sent_synset[1] in self.concept_sets[j]:
+                            self.binary_concepts[i] = np.append(self.binary_concepts[i], 1)
+                            self.concept_sizes[j] += 1
+                         else:
+                             self.binary_concepts[i] = np.append(self.binary_concepts[i], 0)
+        #Find rank depending on the size of the concepts
+        #that the sent contains
+        ranks = np.zeros(len(input_df.index))
+        for i in range(0, len(input_df.index)):
+            for j in range(0, len(self.concept_sets)):
+                if self.binary_concepts[i][j]:
+                    ranks[i] += self.concept_sizes[j]
+        ranks = (ranks * 1.0) / np.amax(ranks)
+        input_df[u'rank:concept'] = ranks
+                            
 class LocationMixin(object):
     def locationrank(self, input_df):
         ranks = input_df['doc position']
@@ -96,20 +154,22 @@ class VerbSpecificityMixin(object):
 
 class DEMSRankerMixin(LeadValuesMixin, VerbSpecificityMixin,
                       CountPronounsMixin, SentLengthMixin, 
-                      LocationMixin):
+                      LocationMixin, ConceptMixin):
     def demsrank(self, input_df, lead_word_weight=1, verb_spec_weight=1,
                 count_pronoun_weight=1, sent_length_weight=1,
-                location_weight=1):
+                location_weight=1, concept_weight=1):
         self.leadvaluesrank(input_df)
         self.verbspecificityrank(input_df)
         self.countpronounsrank(input_df)
         self.sentlengthrank(input_df)
         self.locationrank(input_df)
+        self.conceptrank(input_df)
         input_df[u"rank:demsrank"] = lead_word_weight * input_df[u'rank:leadvalue'] \
             + verb_spec_weight * input_df[u'rank:verbspec'] \
             + count_pronoun_weight * input_df[u'rank:countpronoun'] \
             + sent_length_weight * input_df[u'rank:sentlength'] \
-            + location_weight * input_df['rank:location']
+            + location_weight * input_df[u'rank:location'] \
+            + concept_weight * input_df[u'rank:concept']
 
 class LedeRankerMixin(object):
     def rank_by_lede(self, input_df):
