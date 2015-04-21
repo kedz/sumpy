@@ -19,3 +19,7 @@ def centroid(inputs):
 def dems(inputs):
     s = sumpy.system.DEMSSummarizer()
     return s.summarize(inputs)
+
+def reranker(inputs):
+    s = sumpy.system.RerankerSummarizer()
+    return s.summarize(inputs)
