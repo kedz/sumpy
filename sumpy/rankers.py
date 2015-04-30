@@ -142,10 +142,11 @@ class DiscourseMarkersMixin(object):
             self._dismarkers[i] = self._dismarkers[i].strip().lower()
         dismarker_score = np.ones(len(input_df.index))
         for i in range(0, len(input_df.index)):
-            text = input_df['text'][i].lower()
+            text = input_df['text'][i].strip().lower()
+            text = ''.join(filter(str.isalpha, text))
             for dismarker in self._dismarkers:
                 if text.find(dismarker) == 0:
-                    dismarker_score = 0
+                    dismarker_score[i] = 0
                     break
         input_df[u'rank:dismarker'] = dismarker_score
 
