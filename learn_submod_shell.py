@@ -55,7 +55,8 @@ class ROUGELoss(ROUGE, SentenceTokenizerMixin, WordTokenizerMixin):
         for value in text_ngrams[self._max_ngrams].values():
             numerator += value
         result = numerator * 1.0 / self._denominator
-        #print 'loss: ', result
+        #if not result == 0:
+            #print 'loss: ', result
         return result
         
 class fLAI(ConceptMixin, SentenceTokenizerMixin):
@@ -71,9 +72,6 @@ class fLAI(ConceptMixin, SentenceTokenizerMixin):
         self.conceptrank(input_df)
         self.input_df = input_df
     
-    def set_model_indices(self, model_indices):
-        self._model_indices = model_indices
-
     def rank(self, indices, ignore, l=None):
         text = ''
         for index in indices:
@@ -88,7 +86,7 @@ class fLAI(ConceptMixin, SentenceTokenizerMixin):
         vector = np.zeros(len(self.weights))
         index = 0
         for function in self.functions:
-            normal_return, gold_return = function(self, indices)
+            normal_return, gold_return = function(self, indices, model)
             for alpha in self.alphas:
                 frac_return = alpha * gold_return
                 vector[index] = normal_return
@@ -102,13 +100,9 @@ class fLAI(ConceptMixin, SentenceTokenizerMixin):
         if len(binary_concepts) == 0:
             return 0, 0
         total_concepts = len(binary_concepts[0])
-        model_count = 0
-        for model_index in self._model_indices:
-           for concept_index in range(0, total_concepts):
-               if binary_concepts[model_index][concept_index]:
-                   model_count += 1 
+        model_count = self._num_model_concepts 
         if model:
-            return model_concepts, model_concepts
+            return model_count, model_count
         current_concepts = np.zeros(total_concepts)
         concept_count = 0
         for sent_index in indices:
@@ -138,14 +132,15 @@ def learn_submod_shells(docsets, functions, alphas, learning_rate = 0.01, my_lam
         class_ranker = fLAI(docs, model, w, functions, alphas)
         s.summarize(docs, model, class_ranker, len(model))
         max_indices = s.indices
+        print 'finished a round of greedy reranker'
         #Get g_t
-        f_t_y = fLAI.get_trunc_vector(max_indices)
+        f_t_y = class_ranker.get_trunc_vector(max_indices)
         print 'f_t_y: ', f_t_y  
-        f_t_gold = fLAI.get_trunc_vector(fLAI._model_indices, True)
+        f_t_gold = class_ranker.get_trunc_vector(None, True)
         g_t = my_lambda * w + f_t_y - f_t_gold
         #Check if each w_i is > 0
         for i, w_i in enumerate(w):
-            neww_i = w_i - eta * g_t[i]
+            new_w_i = w_i - eta * g_t[i]
             if new_w_i < 0:
                 w[i] = 0
             else:
