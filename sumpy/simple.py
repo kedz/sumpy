@@ -20,6 +20,6 @@ def dems(inputs):
     s = sumpy.system.DEMSSummarizer()
     return s.summarize(inputs)
 
-def reranker(inputs):
+def reranker(docs, models=None, ranker=None, budget=200):
     s = sumpy.system.RerankerSummarizer()
-    return s.summarize(inputs)
+    return s.summarize(docs, models, ranker, budget)
