@@ -3,6 +3,7 @@ from sumpy.preprocessor import (SentenceTokenizerMixin, WordTokenizerMixin,
     CorpusTfidfMixin)
 from sumpy.rankers import (LedeRankerMixin, TextRankMixin, LexRankMixin, 
     CentroidScoreMixin, DEMSRankerMixin)
+from sumpy.rerankers import (GreedyReranker)
 from sumpy.document import Summary
 import pandas as pd
 from nltk.corpus import wordnet
@@ -55,7 +56,6 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
                 ne = []
                 for i in range(0, len(tree_ne)):
                     if isinstance(tree_ne[i], nltk.tree.Tree):
-                        ne.append(True)
                         if not(tree_ne[i]._label in all_ne.keys()):
                             all_ne[tree_ne[i]._label] = {}
                         dic_ne = all_ne[tree_ne[i]._label]
@@ -64,6 +64,7 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
                             if name != "":
                                 name += " "
                             name += tree_ne[i][j][0]
+                        ne.append(name)
                         if name in dic_ne.keys():
                             dic_ne[name] += 1
                         else:
@@ -83,12 +84,54 @@ class DEMSSummarizer (SentenceTokenizerMixin, WordTokenizerMixin,
                                             "rank:leadvalue",
                                             "rank:countpronoun",
                                             "rank:sentlength",
-                                            "rank:location", "rank:concept"])
-        self.demsrank(input_df)
-        print max_ne
+                                            "rank:location", "rank:concept",
+                                            "rank:leadentity", "rank:dismarker"])
+        self.demsrank(input_df, max_ne)
         input_df.sort(["rank:demsrank"], inplace=True, ascending=False)
         return Summary(input_df)
 
+class RerankerSummarizer(SentenceTokenizerMixin, WordTokenizerMixin, 
+                        GreedyReranker):
+    def __init__(self, sentence_tokenizer=None, word_tokenizer=None, greedy_reranker=None):
+        self._sentence_tokenizer = sentence_tokenizer
+        self._word_tokenizer = word_tokenizer 
+        self._greedy_reranker = greedy_reranker
+
+    def summarize(self, docs, model, class_ranker=None, budget=200):
+        sent_tokenize = self.build_sent_tokenizer()
+        word_tokenize = self.build_word_tokenizer()
+        docs = [sent_tokenize(doc) for doc in docs]
+
+        model_indices = []
+        count = 0
+        sents = []
+        for doc_no, doc in enumerate(docs, 1):
+            for sent_no, sent in enumerate(doc, 1):
+                if sent in model:
+                    model_indices.append(count)
+                count += 1
+                words = word_tokenize(sent)
+                sents.append({"doc": doc_no, "doc position": sent_no, 
+                    "text": sent, "words": words})
+        input_df = pd.DataFrame(sents,
+                                columns=["doc", "doc position", "text", 
+                                         "words", "rank:reranker", "rank:concept"])
+        
+        if hasattr(class_ranker, 'set_model_indices'):
+            class_ranker.set_model_indices(model_indices)
+        if hasattr(class_ranker, 'set_concepts'):
+            class_ranker.set_concepts(input_df)
+            print 'retrieved all concepts'
+        ranker = None
+        if class_ranker:
+            ranker = class_ranker.rank
+        self.greedyrerank(input_df, budget, ranker)
+        input_df.sort(["rank:reranker"], inplace=True, ascending=False)
+        return Summary(input_df)
+    
+    def get_indices():
+        return self.indices
+    
 class LedeSummarizer(SentenceTokenizerMixin, LedeRankerMixin):
     def __init__(self, sentence_tokenizer=None):
         self._sentence_tokenizer = sentence_tokenizer
