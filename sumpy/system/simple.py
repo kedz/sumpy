@@ -101,14 +101,11 @@ class RerankerSummarizer(SentenceTokenizerMixin, WordTokenizerMixin,
         sent_tokenize = self.build_sent_tokenizer()
         word_tokenize = self.build_word_tokenizer()
         docs = [sent_tokenize(doc) for doc in docs]
-
-        model_indices = []
+        
         count = 0
         sents = []
         for doc_no, doc in enumerate(docs, 1):
             for sent_no, sent in enumerate(doc, 1):
-                if sent in model:
-                    model_indices.append(count)
                 count += 1
                 words = word_tokenize(sent)
                 sents.append({"doc": doc_no, "doc position": sent_no, 
@@ -117,8 +114,8 @@ class RerankerSummarizer(SentenceTokenizerMixin, WordTokenizerMixin,
                                 columns=["doc", "doc position", "text", 
                                          "words", "rank:reranker", "rank:concept"])
         
-        if hasattr(class_ranker, 'set_model_indices'):
-            class_ranker.set_model_indices(model_indices)
+        if hasattr(class_ranker, 'get_num_model_concepts'):
+            class_ranker.get_num_model_concepts(model, class_ranker.docset_id)
         if hasattr(class_ranker, 'set_concepts'):
             class_ranker.set_concepts(input_df)
             print 'retrieved all concepts'
