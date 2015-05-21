@@ -1,5 +1,6 @@
 import os
 import re
+import pandas as pd
 
 def load_duc_docset(input_source):
     docs = DucSgmlReader().read(input_source)
@@ -51,7 +52,6 @@ class DucSgmlReader(FileInput):
         return docs
 
 class DucAbstractSgmlReader(FileInput):
-
     def read(self, input_source):
         docs = []
         for path in self.gather_paths(input_source):
@@ -63,3 +63,43 @@ class DucAbstractSgmlReader(FileInput):
                 text = m.group(1).strip()
                 docs.append(text)
         return docs
+
+class MeadDocSentReader(FileInput):
+    docsent_patt = (r"<DOCSENT DID='([^']+)'\s+DOCNO='([^']+)'\s+"
+                    r"LANG='([^']+)'\s+CORR-DOC='([^']+)'>")
+    sent_patt = (r"<S PAR=['\"]([^']+)['\"]\s+"
+                 r"RSNT=['\"]([^']+)['\"]\s+"
+                 r"SNO=['\"]([^']+)['\"]>(.*?)</S>")
+    def read(self, input_source):
+        docs = []
+        for path in self.gather_paths(input_source):
+            sents = []
+            with open(path, u"r") as f:
+                xml = "".join(f.readlines())
+                m = re.search(self.docsent_patt, xml, flags=re.DOTALL)
+                if m is None:
+                    raise Exception("DOCSENT not found in " + path)
+                doc_id = m.group(1)
+                lang = m.group(3)
+                for s in re.finditer(self.sent_patt, xml, flags=re.DOTALL):
+                    par = int(s.group(1))
+                    rsnt = s.group(2)
+                    sno = s.group(3)
+                    text = s.group(4).strip()
+                    if par > 1:
+                        sents.append(text)
+                    #sents.append({u"doc id": doc_id, u"sent id": int(rsnt),
+                    #              u"type": u"body" if par > 1 else u"headline",
+                    #              u"text": text.decode("utf-8")})
+                docs.append("\n".join(sents))
+        #df = pd.DataFrame(
+        #    sents, columns=[u"doc id", u"type", u"sent id", u"text"])
+        #df.set_index([u"doc id", u"sent id"], inplace=True)
+        return docs
+
+def load_demo_docs():
+    import pkg_resources
+    input_source = pkg_resources.resource_filename(
+        "sumpy", 
+        os.path.join("data", "mead_example_docs"))
+    return MeadDocSentReader().read(input_source)
