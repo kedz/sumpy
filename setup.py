@@ -10,11 +10,15 @@ setup(
     author_email='kedzie@cs.columbia.edu',
     url='https://github.com/kedz/sumpy',
     install_requires=[
-        'nltk', 'numpy', 'scipy', 'scikit-learn',
+        'nltk', 'numpy', 'scipy', 'scikit-learn', 'pandas',
     ],
     include_package_data=True,
     package_data={
-        'sumpy': [os.path.join('data', 'smart_common_words.txt.gz')]},
+        'sumpy': [os.path.join('data', 'smart_common_words.txt.gz'),
+                  os.path.join('data', 'mead_example_docs', '41.docsent'),   
+                  os.path.join('data', 'mead_example_docs', '81.docsent'),
+                  os.path.join('data', 'mead_example_docs', '87.docsent'),
+                 ]},
 
 )
                     
