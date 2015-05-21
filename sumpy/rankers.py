@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 from itertools import combinations
 from scipy.sparse import csr_matrix
@@ -20,49 +21,97 @@ class ConceptMixin(object):
     def get_binary_concepts(self):
         return self.binary_concepts
 
-    def conceptrank(self, input_df):
+    def get_num_model_concepts(self, model, file_name=None):
+        if file_name and os.path.isfile(file_name+'.model'):
+            model_file = open(file_name+'.model', 'rb')
+            [self._num_model_concepts] = pickle.load(model_file)
+            model_file.close()
+            return
+        self.m_concept_sets = {}
+        self._num_model_concepts = 0
+        print 'started'
+        synsets = disambiguate(model)
+        print 'done'
+        for synset in synsets:
+            if synset[1]:
+                if not synset[1] in self.m_concept_sets.keys():
+                    hypo = synset[1].hyponyms()
+                    hyper = synset[1].hypernyms()
+                    new_concept = hypo + [synset[1]]
+                    new_concept.extend(hyper)
+                    for c_synset in new_concept:
+                        if c_synset in self.m_concept_sets.keys():
+                            self.m_concept_sets[c_synset].append([new_concept])
+                        else:
+                            self.m_concept_sets[c_synset] = [[new_concept]]
+                    self._num_model_concepts += 1
+        if file_name:
+            model_file = open(file_name+'.model', 'ab+')
+            pickle.dump([self._num_model_concepts], model_file)
+            model_file.close()
+        print self._num_model_concepts
+         
+    def conceptrank(self, input_df, file_name=None):
+        if file_name and os.path.isfile(file_name+'.concepts'):
+            concept_file = open(file_name+'.concepts', 'rb')
+            [self.binary_concepts, self.concept_sizes] = pickle.load(concept_file)
+            concept_file.close()
+            return
         #initialize counts
         self.synsets = []
-        self.concept_sets = []
-        self.concept_sizes = []
-        self.binary_concepts = []
+        self.concept_sets = {}
+        self.concept_sizes = {}
+        self.binary_concepts = {}
+        num_concepts = 0
         #Go through all sent
         for i, sent in enumerate(input_df['text']):
             self.synsets.append(disambiguate(sent))
             #Go through each word with synset
             for sent_synset in self.synsets[i]:
                 if sent_synset[1]:
-                    found = False
-                    #See if its part of an existing concept
-                    for j, existing_concept in enumerate(self.concept_sets):
-                        if sent_synset[1] in existing_concept: 
-                            found = True
                     #If not, add a new concept
-                    if not found:
+                    if not sent_synset[1] in self.concept_sets.keys():
                         #Create concept from hyper/hyponyms
+                        num_concepts += 1
                         sent_hypo = sent_synset[1].hyponyms()
                         sent_hyper = sent_synset[1].hypernyms()
                         new_concept = sent_hypo + [sent_synset[1]]
                         new_concept.extend(sent_hyper)
-                        self.concept_sets.append(new_concept)
+                        for c_synset in new_concept:
+                            if c_synset in self.concept_sets.keys():
+                                    self.concept_sets[c_synset]\
+                                    .append([new_concept])
+                            else:
+                                self.concept_sets[c_synset] = [[new_concept]]
         #Go through each sent's words
-        self.concept_sizes = np.zeros(len(self.concept_sets)) 
         for i,sent in enumerate(input_df['text']):
-            self.binary_concepts.append(np.zeros(len(self.concept_sets)))
+            self.binary_concepts[i] = {}
             for sent_synset in self.synsets[i]:
                 if sent_synset[1]:
-                    #Count number of concepts each word show up in
-                    for j in range(0, len(self.concept_sets)):
-                         if sent_synset[1] in self.concept_sets[j]:
-                            self.binary_concepts[i][j] = 1
-                            self.concept_sizes[j] += 1
+                    concepts_list = self.concept_sets[sent_synset[1]]
+                    for concepts in concepts_list:
+                        for concept in concepts:
+                            concept = str(concept)
+                            if concept in self.binary_concepts[i].keys():
+                                self.binary_concepts[i][concept] += 1
+                            else:
+                                self.binary_concepts[i][concept] = 1
+                            if concept in self.concept_sizes.keys():
+                                self.concept_sizes[concept] += 1
+                            else:
+                                self.concept_sizes[concept] = 1
+        if file_name:
+            output = open(file_name + '.concepts', 'ab+')
+            to_save = [self.binary_concepts, self.concept_sizes]
+            pickle.dump(to_save, output)
+            output.close()
+            return 
         #Find rank depending on the size of the concepts
         #that the sent contains
         ranks = np.zeros(len(input_df.index))
         for i in range(0, len(input_df['text'])):
-            for j in range(0, len(self.concept_sets)):
-                if self.binary_concepts[i][j]:
-                    ranks[i] += self.concept_sizes[j]
+            for key in self.binary_concepts[i].keys():
+                    ranks[i] += self.concept_sizes[key]
         ranks = (ranks * 1.0) / np.amax(ranks)
         input_df[u'rank:concept'] = ranks
 
@@ -177,8 +226,8 @@ class DEMSRankerMixin(LeadValuesMixin, VerbSpecificityMixin,
                       CountPronounsMixin, SentLengthMixin, 
                       LocationMixin, ConceptMixin, TargetEntityMixin,
                       DiscourseMarkersMixin):
-    def demsrank(self, input_df, target_entity, lead_word_weight=0.5, verb_spec_weight=0.5,
-                count_pronoun_weight=0.5, sent_length_weight=0.5,
+    def demsrank(self, input_df, target_entity, lead_word_weight=1, verb_spec_weight=1,
+                count_pronoun_weight=1, sent_length_weight=1,
                 location_weight=1, concept_weight=1, lead_entity_weight=1,
                 dismarkers_weight=1,):
         self.leadvaluesrank(input_df)
