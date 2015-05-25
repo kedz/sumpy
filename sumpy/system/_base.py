@@ -132,60 +132,33 @@ class _SystemBase(object):
         check_mixins(self.__class__) 
         self._dependency_graph = G
 
-    
-    
-        #A = nx.to_agraph(G)
-        #A.layout("dot")
-        #A.draw("test.png")
-
-    def print_dependency_graph(self):
+    def print_dependency_graph(self, filename=None, to_iPython=True):
         import pygraphviz as pgv
-        
-        if not hasattr(self, "_preprocessors"):
-            self.build_preprocessor()
-        if not hasattr(self, "_feature_extractors"):
-            self.build_feature_extractor()
+        if not hasattr(self, "_dependency_graph") or \
+                self._dependency_graph is None:
+            self.build_dependency_graph()
 
-        G = pgv.AGraph(strict=False, directed=True)
+        if filename is None:
+            filename = "sumpy.tmp.png"
 
-        for preprocessor in self._preprocessors:
-            for req in preprocessor.requires():
-                G.add_edge(req, preprocessor.name())
-            for req in preprocessor.ndarray_requires():
-                G.add_edge(req, preprocessor.name())
-                node = G.get_node(req)
-                node.attr["shape"] = "parallelogram"
-
-            for rtype in preprocessor.returns():
-                G.add_edge(preprocessor.name(), rtype)
-            for rtype in preprocessor.ndarray_returns():
-                G.add_edge(preprocessor.name(), rtype)
-                node = G.get_node(rtype)
-                node.attr["shape"] = "parallelogram"
-
-            node = G.get_node(preprocessor.name())
-            node.attr['shape'] = 'box'
-            node.attr['color'] = 'purple'
-
-        for extractor in self._feature_extractors:
-            for req in extractor.requires():
-                G.add_edge(req, extractor.name())
-            for req in extractor.ndarray_requires():
-                G.add_edge(req, extractor.name())
-                node = G.get_node(req)
-                node.attr["shape"] = "parallelogram"
-
-            for rtype in extractor.returns():
-                G.add_edge(extractor.name(), rtype)
-            for rtype in extractor.ndarray_returns():
-                G.add_edge(extractor.name(), rtype)
-                node = G.get_node(rtype)
-                node.attr["shape"] = "parallelogram"
-
-            node = G.get_node(extractor.name())
-            node.attr['shape'] = 'box'
-            node.attr['color'] = 'green'
+        G = pgv.AGraph(strict=False, directed=True) 
+        for node in self._dependency_graph:
+            if node in self._annotators:
+                G.add_node(node)
+                G.get_node(node).attr["shape"] ="rectangle"
+            elif node.startswith("f:"):
+                G.add_node(node)
+                G.get_node(node).attr["shape"] ="parallelogram"
+                for edge in self._dependency_graph.in_edges(node):
+                    G.add_edge(edge[0], edge[1], color="green")
+            else:
+                for in_edge in self._dependency_graph.in_edges(node):
+                    for out_edge in self._dependency_graph.out_edges(node):
+                        G.add_edge(in_edge[0], out_edge[1], 
+                                   label=node, key=node)
 
         G.layout("dot")
-        G.draw("test.png")
-
+        G.draw(filename)
+        if to_iPython is True:
+            from IPython.display import Image 
+            return Image(filename=filename)
