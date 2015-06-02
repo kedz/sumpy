@@ -212,8 +212,10 @@ class MMRMixin(TfIdfCosineSimilarityMixin):
         def rank(input_df, ndarray_data):
             K = ndarray_data["TfIdfCosSimMatrix"] 
             K = np.ma.masked_array(K, mask=np.diag(np.diag(K)))
-            K_input = np.ma.masked_array(K, mask=False, fill_value=0, hardmask=False)
-            K_summ = np.ma.masked_array(K, mask=True, fill_value=0, hardmask=False)
+            K_input = np.ma.masked_array(
+                K, mask=False, fill_value=0, hardmask=False)
+            K_summ = np.ma.masked_array(
+                K, mask=True, fill_value=0, hardmask=False)
 
             w1 = self.lam
             w2 = (1 - w1)
