@@ -1,54 +1,37 @@
 import re
 import textwrap
-from sumpy.preprocessor import WordTokenizerMixin
 
-class Summary(WordTokenizerMixin):
+class Summary(object):
     def __init__(self, df):
         self._df = df
-        self._word_tokenizer = None
-        self._tokenize = self.build_word_tokenizer()
 
-    def _pretty_sent(self, sentence):
-        no_rn = re.sub(r"\n|\r", r" ", sentence, flags=re.UNICODE)
-        return re.sub(r"  \s+", r" ", no_rn, flags=re.UNICODE)
+    def budget(self, type="byte", size=600):
+        summary = []
+        if type == "word":
+            remaining = size
+            for idx, sent in self._df.iterrows():
+                num_words = min(len(sent["words"]), remaining)
+                summary.append(u" ".join(sent["words"][0 : num_words]))
+                remaining -= num_words
+                if remaining < 1:
+                    break
+        elif type == "byte":
+            remaining = size
+            for idx, sent in self._df.iterrows():
+                num_chars = min(len(sent["sent text"]), remaining)
+                print num_chars
+                summary.append(sent["sent text"][0 : num_chars])
+                remaining -= num_chars
+                if remaining < 1:
+                    break
+        return u"\n".join(textwrap.fill(u"{}) {}".format(i, sent))
+                          for i, sent in enumerate(summary, 1)) + u" ..." 
 
-    def _make_pretty(self, length=200):
-        size = 0
-        sents = []
-        for sent in self._df[u"text"].tolist():
-            size += len(self._tokenize(sent))
-            sents.append(sent)
-            if size >= length:
-                break
-                    
-        psents = [self._pretty_sent(sent)
-                  for sent in sents]
-        return textwrap.fill(u"\n".join(psents))
-
-    def __unicode__(self, length=200):
-        return self._make_pretty(length=length)
+    def __unicode__(self):
+        return self.budget()
 
     def __str__(self):
-        return unicode(self).encode(u"utf-8")
-
-
-    def to_spl(self, length=200, encoding=None):
-        size = 0
-        sents = []
-        for sent in self._df[u"text"].tolist():
-            size += len(self._tokenize(sent))
-            sents.append(sent)
-            if size >= length:
-                break
-                    
-        psents = [self._pretty_sent(sent)
-                  for sent in sents]
-        if encoding is not None:
-            return u"\n".join(psents).encode(encoding)
-        else:
-            return u"\n".join(psents)
-
-
+        return unicode(self).encode("utf-8")
 
 
 class Document(object):
