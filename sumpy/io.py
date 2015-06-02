@@ -91,7 +91,7 @@ class MeadDocSentReader(FileInput):
                     #sents.append({u"doc id": doc_id, u"sent id": int(rsnt),
                     #              u"type": u"body" if par > 1 else u"headline",
                     #              u"text": text.decode("utf-8")})
-                docs.append("\n".join(sents))
+                docs.append("\n".join(sents).decode("utf-8"))
         #df = pd.DataFrame(
         #    sents, columns=[u"doc id", u"type", u"sent id", u"text"])
         #df.set_index([u"doc id", u"sent id"], inplace=True)
