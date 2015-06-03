@@ -7,7 +7,9 @@ class Summary(object):
 
     def budget(self, type="byte", size=600):
         summary = []
-        if type == "word":
+        if size == "all":
+            summary = self._df["sent text"].tolist()
+        elif type == "word":
             remaining = size
             for idx, sent in self._df.iterrows():
                 num_words = min(len(sent["words"]), remaining)
