@@ -11,6 +11,7 @@ setup(
     url='https://github.com/kedz/sumpy',
     install_requires=[
         'nltk', 'numpy', 'scipy', 'scikit-learn', 'pandas',
+        'networkx',
     ],
     include_package_data=True,
     package_data={
