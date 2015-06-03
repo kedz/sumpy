@@ -1,4 +1,6 @@
 from sumpy.annotators._annotator_base import _AnnotatorBase
+from sumpy.annotators import SentenceTokenizerMixin, WordTokenizerMixin
+from sumpy.document import Summary
 from abc import ABCMeta, abstractmethod
 import pandas as pd
 import numpy as np
@@ -67,11 +69,14 @@ class _SystemBase(object):
             df = pd.DataFrame([{"doc id": doc_id, "doc text": doc_text}
                                  for doc_id, doc_text in enumerate(inputs)],
                                 columns=["doc id"] + all_cols)
-           # df.set_index("doc id", inplace=True)
             return df, ndarray_data
-        #elif isinstance(inputs, pd.DataFrame):
-            
 
+        elif isinstance(inputs, pd.DataFrame):
+            if "doc id" not in inputs:
+                raise Exception("input DataFrame must have column 'doc id'")
+            cols = list(set(inputs.columns.tolist() + all_cols))
+            df = pd.DataFrame(inputs.to_dict(), columns=cols)
+            return df, ndarray_data
         else:
             raise Exception("Bad input: list of strings or dataframe only.")
 
@@ -162,3 +167,13 @@ class _SystemBase(object):
         if to_iPython is True:
             from IPython.display import Image 
             return Image(filename=filename)
+
+class AverageFeatureRankerBase(
+        WordTokenizerMixin, _SystemBase):
+        
+    def build_summary(self, input_df, ndarray_data):
+        cols = [f for f in input_df.columns.tolist() if f.startswith("f:")]
+        X = input_df[cols].values
+        input_df["rank"] = (X / X.max(axis=0)).mean(axis=1)
+        output_df = input_df.sort(["rank"], ascending=False)
+        return Summary(output_df)
