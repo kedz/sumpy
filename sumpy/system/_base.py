@@ -74,8 +74,10 @@ class _SystemBase(object):
         elif isinstance(inputs, pd.DataFrame):
             if "doc id" not in inputs:
                 raise Exception("input DataFrame must have column 'doc id'")
+
             cols = list(set(inputs.columns.tolist() + all_cols))
             df = pd.DataFrame(inputs.to_dict(), columns=cols)
+            df.reset_index(inplace=True)
             return df, ndarray_data
         else:
             raise Exception("Bad input: list of strings or dataframe only.")
