@@ -1,4 +1,4 @@
-from sumpy.annotators import TfIdfCosineSimilarityMixin
+from sumpy.annotators import WordTokenizerMixin, TfIdfCosineSimilarityMixin
 import numpy as np
 
 
@@ -125,5 +125,118 @@ class SubmodularMMRMixin(TfIdfCosineSimilarityMixin):
 
     def name(self):
         return "SubmodularMMRMixin"
+
+class MonotoneSubmodularMixin(WordTokenizerMixin):
+    def build(self):
+        if not hasattr(self, "k"):
+            self.k = 5
+        assert self.k > 0
+        
+        if not hasattr(self, "f_of_A") or self.f_of_A is None:
+            def f_of_A(system, A, V_min_A, e, input_df, ndarray_input):
+                return len(
+                    set([word for words in input_df.ix[A, "words"].tolist() for word in words]))
+            self.f_of_A = f_of_A
+
+    def process(self, input_df, ndarray_data):
+
+        input_size = len(input_df)
+        S = []
+        V_min_S = [i for i in xrange(input_size)]
+        f_of_S = 0        
+        for i in xrange(self.k):
+            arg_max = None
+            gain_max = 0
+            f_of_S_max = 0
+            for pos, elem in enumerate(V_min_S):
+                S_plus_e = S + [elem]
+                V_min_S_plus_e = V_min_S[:pos] + V_min_S[pos+1:]
+                score = self.f_of_A(
+                    self, S_plus_e, V_min_S_plus_e, elem, input_df, ndarray_data) 
+                gain = score - f_of_S
+
+                if gain > gain_max: 
+                    arg_max = pos
+                    gain_max = gain
+                    f_of_S_max = score
+
+            if arg_max is not None:
+                S += [V_min_S[arg_max]]
+                f_of_S = f_of_S_max
+                del V_min_S[arg_max]
+
+        input_df.ix[S, "f:monotone-submod"] = 1        
+        input_df.ix[V_min_S, "f:monotone-submod"] = 0        
+    
+        return input_df, ndarray_data 
+
+    def process2(self, input_df, ndarray_data):
+        
+        input_size = len(input_df)
+        S = []
+        N = set()
+
+        n_of_e = input_df["nuggets"].tolist()
+        V_min_S = [i for i in xrange(input_size)]
+        f_of_S = 0        
+
+
+        for i in xrange(self.k):
+            arg_max = None
+            gain_max = 0
+            for pos, elem in enumerate(V_min_S):
+                #print "elem", elem
+                #print "S", S
+                #print "V_min_S", V_min_S
+                #print "n(e) =", n_of_e[elem]
+                n_of_S_U_e = N.union(n_of_e[elem])
+                #print "S U {e}", S + [elem]
+                #print "n(S U {e})", n_of_S_U_e
+
+                gain = self._f_of_S(n_of_S_U_e) - f_of_S
+                #print "gain", gain
+                #print
+                if gain > gain_max: 
+                    arg_max = pos
+                    gain_max = gain
+
+            if arg_max is not None:
+                S = S + [V_min_S[arg_max]]
+                N = N.union(n_of_e[V_min_S[arg_max]])
+                f_of_S = len(N)
+                
+                print "ARG MAX", V_min_S[arg_max]
+                print "S", S
+                print "N", N
+                print "f(S)", f_of_S
+                
+                del V_min_S[arg_max]
+
+
+        print S
+        print input_df
+        print input_size
+        input_df.ix[S, "f:monotone-submod"] = 1        
+        input_df.ix[V_min_S, "f:monotone-submod"] = 0        
+
+
+        return input_df, ndarray_data
+
+
+    def requires(self):
+        return ["words"]
+    
+    def ndarray_requires(self):
+        return []
+
+    def returns(self):
+        return ["f:montone-submod"]
+
+    def ndarray_returns(self):
+        return []
+
+    def name(self):
+        return "MonotoneSubmod" 
+
 
 
