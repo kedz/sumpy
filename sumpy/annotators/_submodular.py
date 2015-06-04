@@ -146,7 +146,7 @@ class MonotoneSubmodularMixin(WordTokenizerMixin):
         f_of_S = 0        
         for i in xrange(self.k):
             arg_max = None
-            gain_max = 0
+            gain_max = float("-inf")
             f_of_S_max = 0
             for pos, elem in enumerate(V_min_S):
                 S_plus_e = S + [elem]
@@ -160,10 +160,19 @@ class MonotoneSubmodularMixin(WordTokenizerMixin):
                     gain_max = gain
                     f_of_S_max = score
 
-            if arg_max is not None:
+#            print "S", set(n for ns in input_df.loc[S, "nuggets"].tolist() for n in ns)
+#            print "arg max", V_min_S[arg_max]
+#            print "nuggets", input_df.loc[V_min_S[arg_max], "nuggets"]
+#            print "gain", gain_max
+#            print
+
+
+            if arg_max is not None and gain_max > 0:
                 S += [V_min_S[arg_max]]
                 f_of_S = f_of_S_max
                 del V_min_S[arg_max]
+            if gain_max == 0:
+                break
 
         input_df.ix[S, "f:monotone-submod"] = 1        
         input_df.ix[V_min_S, "f:monotone-submod"] = 0        
