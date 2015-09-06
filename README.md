@@ -4,9 +4,13 @@ SUMPY: a python automatic text summarization library
 We currently have several baseline summarizers implemented:
 
 [x] lede
+
 [x] TextRank
+
 [x] LexRank
+
 [x] Centroid
+
 [x] ROUGE ngram evaluation
 
 and have plans to implement many more.
