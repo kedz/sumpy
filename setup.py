@@ -1,9 +1,11 @@
 from setuptools import setup
 import os
+import sys
 
+data_dir = os.path.join(sys.prefix, "data")
 setup(
     name = 'sumpy',
-    packages = ['sumpy'],
+    packages = ['sumpy', 'sumpy.system', 'sumpy.annotators'],
     version = '0.0.1',
     description = 'SUMPY: an automatic text summarization library',
     author='Chris Kedzie',
@@ -15,10 +17,10 @@ setup(
     ],
     include_package_data=True,
     package_data={
-        'sumpy': [os.path.join('data', 'smart_common_words.txt.gz'),
-                  os.path.join('data', 'mead_example_docs', '41.docsent'),   
-                  os.path.join('data', 'mead_example_docs', '81.docsent'),
-                  os.path.join('data', 'mead_example_docs', '87.docsent'),
+        'sumpy': [os.path.join(data_dir, 'smart_common_words.txt.gz'),
+                  os.path.join(data_dir, 'mead_example_docs', '41.docsent'),   
+                  os.path.join(data_dir, 'mead_example_docs', '81.docsent'),
+                  os.path.join(data_dir, 'mead_example_docs', '87.docsent'),
                  ]},
 
 )
