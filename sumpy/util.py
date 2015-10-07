@@ -6,7 +6,7 @@ class DUCHelper(object):
             duc_path = os.getenv("DUC_DATA", "~/DUC")
         self.duc04_task1and2_docsets = os.path.join(
             duc_path, "DUC2004_Summarization_Documents", "duc2004_testdata",
-            "tasks1and2", "duc2004_tasks1and2_docs")
+            "tasks1and2", "duc2004_tasks1and2_docs", "docs")
         self.duc04_task1and2_docset_ids = [
             "d30001t", "d30010t", "d30026t", "d30036t", "d30046t", "d30055t",
             "d31022t", "d31050t", "d30002t", "d30011t", "d30027t", "d30037t",
@@ -656,7 +656,7 @@ class DUCDocset(object):
 
     def __iter__(self):
         for doc_id in self.doc_ids:
-            yield DUCDocument(doc_id, os.path.join(self.path, "docs", doc_id))
+            yield DUCDocument(doc_id, os.path.join(self.path, doc_id))
 
 class DUCDocument(object):
     def __init__(self, doc_id, path):
