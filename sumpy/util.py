@@ -656,7 +656,7 @@ class DUCDocset(object):
 
     def __iter__(self):
         for doc_id in self.doc_ids:
-            yield DUCDocument(doc_id, os.path.join(self.path, doc_id))
+            yield DUCDocument(doc_id, os.path.join(self.path, "docs", doc_id))
 
 class DUCDocument(object):
     def __init__(self, doc_id, path):
