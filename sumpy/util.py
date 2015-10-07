@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 class DUCHelper(object):
     def __init__(self, duc_path=None):
@@ -656,11 +657,16 @@ class DUCDocset(object):
 
     def __iter__(self):
         for doc_id in self.doc_ids:
-            yield DUCDocument(doc_id, os.path.join(self.path, doc_id))
+            timestamp_t = int(doc_id[3:7]), int(doc_id[7:9]), int(doc_id[9:11])
+            timestamp = datetime(*timestamp_t)
+
+            yield DUCDocument(
+                    doc_id, timestamp, os.path.join(self.path, doc_id))
 
 class DUCDocument(object):
-    def __init__(self, doc_id, path):
+    def __init__(self, doc_id, timestamp, path):
         self.doc_id = doc_id
+        self.timestamp = timestamp
         self.path = path
         self._text = None
 
