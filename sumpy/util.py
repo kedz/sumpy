@@ -666,7 +666,7 @@ class DUCDocument(object):
 
     def _read(self):
         if os.path.exists(self.path):
-            with open(self.path. "rb") as f:
+            with open(self.path, "rb") as f:
                 self._text = f.read()
         else:
             raise Exception("DUCDocument {} not found at path {}".format(
