@@ -240,7 +240,7 @@ class DUCHelper(object):
                     "NYT19981209.0451",
                     "APW19981221.0189",
                 ],
-                "inputs": [
+                "models": [
                     "D30017.M.100.T.A",
                     "D30017.M.100.T.B",
                     "D30017.M.100.T.F",
