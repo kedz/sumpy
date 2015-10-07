@@ -1034,7 +1034,7 @@ class DUCHelper(object):
 
         if year == 2004:
             if task == 2:
-                for docset_id in self.duc04_task2_docset_ids
+                for docset_id in self.duc04_task2_docset_ids:
                     ds = DUCDocset(
                         docset_id, 2004, 2,
                         self.duc04_task2[docset_id]["inputs"],
