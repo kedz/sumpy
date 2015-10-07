@@ -623,15 +623,19 @@ class DUCHelper(object):
         
 
 
-    def duc04_docsets(self):
-        for docset_id in self.duc04_task1and2_docset_ids:
-            ds = DUCDocset(
-                docset_id,
-                os.path.join(self.duc04_task1and2_docsets, docset_id),
-                self.duc04_task1and2_docset_id2doc_ids[docset_id],
-                year=2004, task=[1,2])
-            yield ds
-        
+    def docsets_iter(self, year, task):
+
+        if year == 2004:
+            if task == 2 or task == 1:
+                for docset_id in self.duc04_task1and2_docset_ids:
+                    ds = DUCDocset(
+                        docset_id,
+                        os.path.join(self.duc04_task1and2_docsets, docset_id),
+                        self.duc04_task1and2_docset_id2doc_ids[docset_id],
+                        year=2004, task=[1,2])
+                    yield ds
+        else:
+            raise Exception("Bad argument: year is {}".format(year))
 
 class DUCDocset(object):
     def __init__(self, docset_id, path, doc_ids, year=None, task=None):
