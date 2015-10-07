@@ -623,7 +623,7 @@ class DUCHelper(object):
         
 
 
-    def docsets_iter(self, year, task):
+    def docset_iter(self, year, task):
 
         if year == 2004:
             if task == 2 or task == 1:
