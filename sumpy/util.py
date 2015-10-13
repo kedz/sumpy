@@ -14,8 +14,9 @@ class DUCHelper(object):
             duc_path = os.getenv("DUC_DATA", "~/DUC")
         self.duc_path = duc_path
         if sumpy_data_path is None:
-            self.sumpy_data_path = os.path.join(
-                os.path.expanduser("~"), ".sumpy")
+            self.sumpy_data_path = os.getenv("SUMPY_DATA",
+                os.path.join(
+                    os.path.expanduser("~"), ".sumpy"))
         
     def docset_iter(self, year, task):
 
