@@ -18,10 +18,15 @@ class DUCHelper(object):
         self.duc04_task2_docsets_path = os.path.join(
             duc_path, "DUC2004_Summarization_Documents", "duc2004_testdata",
             "tasks1and2", "duc2004_tasks1and2_docs", "docs")
+        self.duc07_task2_docsets_path = os.path.join(
+            duc_path, "DUC2007_Summarization_Documents", "duc2007_testdocs", 
+            "update")
         self.duc03_task2_models_path = os.path.join(
                 duc_path, "detagged.duc2003.abstracts", "models")
         self.duc04_task2_models_path = os.path.join(
                 duc_path, "duc2004_results", "ROUGE", "eval", "models", "2")
+        self.duc07_task2_models_path = os.path.join(
+                duc_path, "updateEval", "ROUGE", "models")
 
         self.duc03_task2_docset_ids = [
             "d30003t", "d30005t", "d30010t", "d30012t", "d30016t", "d30020t", 
@@ -1643,10 +1648,350 @@ class DUCHelper(object):
             },
         }
 
+        self.duc07_task2_docset_ids = [
+            "D0703A", "D0706B", "D0711C", "D0716D", "D0721E", "D0726F", 
+            "D0727G", "D0736H", "D0740I", "D0743J",
+        ]
+
+        self.duc07_task2 = {
+            "D0703A": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0703-A.M.100.A.A",
+                        "D0703-A.M.100.A.C",
+                        "D0703-A.M.100.A.D",
+                        "D0703-A.M.100.A.J",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0703-B.M.100.A.A",
+                        "D0703-B.M.100.A.C",
+                        "D0703-B.M.100.A.D",
+                        "D0703-B.M.100.A.J",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0703-C.M.100.A.A",
+                        "D0703-C.M.100.A.C",
+                        "D0703-C.M.100.A.D",
+                        "D0703-C.M.100.A.J",
+                    ],
+                },
+            },
+            "D0706B": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0706-A.M.100.B.B",
+                        "D0706-A.M.100.B.D",
+                        "D0706-A.M.100.B.E",
+                        "D0706-A.M.100.B.I",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0706-B.M.100.B.B",
+                        "D0706-B.M.100.B.D",
+                        "D0706-B.M.100.B.E",
+                        "D0706-B.M.100.B.I",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0706-C.M.100.B.B",
+                        "D0706-C.M.100.B.D",
+                        "D0706-C.M.100.B.E",
+                        "D0706-C.M.100.B.I",
+                    ],
+                },
+            },
+            "D0711C": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0711-A.M.100.C.A",
+                        "D0711-A.M.100.C.B",
+                        "D0711-A.M.100.C.C",
+                        "D0711-A.M.100.C.F",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0711-B.M.100.C.A",
+                        "D0711-B.M.100.C.B",
+                        "D0711-B.M.100.C.C",
+                        "D0711-B.M.100.C.F",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0711-C.M.100.C.A",
+                        "D0711-C.M.100.C.B",
+                        "D0711-C.M.100.C.C",
+                        "D0711-C.M.100.C.F",
+                    ],
+                },
+            },
+            "D0716D": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0716-A.M.100.D.C",
+                        "D0716-A.M.100.D.D",
+                        "D0716-A.M.100.D.E",
+                        "D0716-A.M.100.D.F",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0716-B.M.100.D.C",
+                        "D0716-B.M.100.D.D",
+                        "D0716-B.M.100.D.E",
+                        "D0716-B.M.100.D.F",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0716-C.M.100.D.C",
+                        "D0716-C.M.100.D.D",
+                        "D0716-C.M.100.D.E",
+                        "D0716-C.M.100.D.F",
+                    ],
+                },
+            },
+            "D0721E": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0721-A.M.100.E.B",
+                        "D0721-A.M.100.E.C",
+                        "D0721-A.M.100.E.E",
+                        "D0721-A.M.100.E.G",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0721-B.M.100.E.B",
+                        "D0721-B.M.100.E.C",
+                        "D0721-B.M.100.E.E",
+                        "D0721-B.M.100.E.G",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0721-C.M.100.E.B",
+                        "D0721-C.M.100.E.C",
+                        "D0721-C.M.100.E.E",
+                        "D0721-C.M.100.E.G",
+                    ],
+                },
+            },
+            "D0726F": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0726-A.M.100.F.A",
+                        "D0726-A.M.100.F.E",
+                        "D0726-A.M.100.F.F",
+                        "D0726-A.M.100.F.G",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0726-B.M.100.F.A",
+                        "D0726-B.M.100.F.E",
+                        "D0726-B.M.100.F.F",
+                        "D0726-B.M.100.F.G",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0726-C.M.100.F.A",
+                        "D0726-C.M.100.F.E",
+                        "D0726-C.M.100.F.F",
+                        "D0726-C.M.100.F.G",
+                    ],
+                },
+            },
+            "D0727G": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0727-A.M.100.G.A",
+                        "D0727-A.M.100.G.F",
+                        "D0727-A.M.100.G.G",
+                        "D0727-A.M.100.G.H",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0727-B.M.100.G.A",
+                        "D0727-B.M.100.G.F",
+                        "D0727-B.M.100.G.G",
+                        "D0727-B.M.100.G.H",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0727-C.M.100.G.A",
+                        "D0727-C.M.100.G.F",
+                        "D0727-C.M.100.G.G",
+                        "D0727-C.M.100.G.H",
+                    ],
+                },
+            },
+            "D0736H": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0736-A.M.100.H.G",
+                        "D0736-A.M.100.H.H",
+                        "D0736-A.M.100.H.I",
+                        "D0736-A.M.100.H.J",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0736-B.M.100.H.G",
+                        "D0736-B.M.100.H.H",
+                        "D0736-B.M.100.H.I",
+                        "D0736-B.M.100.H.J",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0736-C.M.100.H.G",
+                        "D0736-C.M.100.H.H",
+                        "D0736-C.M.100.H.I",
+                        "D0736-C.M.100.H.J",
+                    ],
+                },
+            },
+            "D0740I": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0740-A.M.100.I.D",
+                        "D0740-A.M.100.I.H",
+                        "D0740-A.M.100.I.I",
+                        "D0740-A.M.100.I.J",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0740-B.M.100.I.D",
+                        "D0740-B.M.100.I.H",
+                        "D0740-B.M.100.I.I",
+                        "D0740-B.M.100.I.J",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0740-C.M.100.I.D",
+                        "D0740-C.M.100.I.H",
+                        "D0740-C.M.100.I.I",
+                        "D0740-C.M.100.I.J",
+                    ],
+                },
+            },
+            "D0743J": {
+                "A": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0743-A.M.100.J.B",
+                        "D0743-A.M.100.J.H",
+                        "D0743-A.M.100.J.I",
+                        "D0743-A.M.100.J.J",
+                    ],
+                },
+                "B": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0743-B.M.100.J.B",
+                        "D0743-B.M.100.J.H",
+                        "D0743-B.M.100.J.I",
+                        "D0743-B.M.100.J.J",
+                    ],
+                },
+                "C": {
+                    "inputs": [
+                    ],
+                    "models": [
+                        "D0743-C.M.100.J.B",
+                        "D0743-C.M.100.J.H",
+                        "D0743-C.M.100.J.I",
+                        "D0743-C.M.100.J.J",
+                    ],
+                },
+            },
+        }
 
     def docset_iter(self, year, task):
 
-        if year == 2004:
+        if year == 2003:
+            if task == 2:
+                for docset_id in self.duc03_task2_docset_ids:
+                    ds = DUCDocset(
+                        docset_id, 2003, 2,
+                        self.duc03_task2[docset_id]["inputs"],
+                        os.path.join(self.duc03_task2_docsets_path, docset_id),
+                        self.duc03_task2[docset_id]["models"],
+                        os.path.join(self.duc03_task2_models_path))
+
+                    yield ds
+
+
+        elif year == 2004:
             if task == 2:
                 for docset_id in self.duc04_task2_docset_ids:
                     ds = DUCDocset(
@@ -1658,17 +2003,35 @@ class DUCHelper(object):
 
                     yield ds
 
-        elif year == 2003:
+        elif year == 2007:
             if task == 2:
-                for docset_id in self.duc03_task2_docset_ids:
-                    ds = DUCDocset(
-                        docset_id, 2003, 2,
-                        self.duc03_task2[docset_id]["inputs"],
-                        os.path.join(self.duc03_task2_docsets_path, docset_id),
-                        self.duc03_task2[docset_id]["models"],
-                        os.path.join(self.duc03_task2_models_path))
+                for docset_id in self.duc07_task2_docset_ids:
+                    dsA = DUCDocset(
+                        docset_id, 2007, 2,
+                        self.duc07_task2[docset_id]["A"]["inputs"],
+                        os.path.join(self.duc07_task2_docsets_path, 
+                            "{}-A".format(docset_id)),
+                        self.duc07_task2[docset_id]["A"]["models"],
+                        os.path.join(self.duc07_task2_models_path))
+                    dsB = DUCDocset(
+                        docset_id, 2007, 2,
+                        self.duc07_task2[docset_id]["B"]["inputs"],
+                        os.path.join(self.duc07_task2_docsets_path, 
+                            "{}-B".format(docset_id)),
+                        self.duc07_task2[docset_id]["B"]["models"],
+                        os.path.join(self.duc07_task2_models_path))
+                    dsC = DUCDocset(
+                        docset_id, 2007, 2,
+                        self.duc07_task2[docset_id]["C"]["inputs"],
+                        os.path.join(self.duc07_task2_docsets_path, 
+                            "{}-C".format(docset_id)),
+                        self.duc07_task2[docset_id]["C"]["models"],
+                        os.path.join(self.duc07_task2_models_path))
 
+                    ds = DUCUpdateDocset(
+                        docset_id, year, task, [dsA, dsB, dsC])
                     yield ds
+
         else:
             raise Exception("Bad argument: year is {}".format(year))
 
@@ -1700,6 +2063,17 @@ class DUCDocset(object):
     def model_iter(self):
         for doc_id in self.models:
             yield DUCModel(doc_id, os.path.join(self.model_root, doc_id))
+
+class DUCUpdateDocset(object):
+    def __init__(self, docset_id, year, task, docsets):
+        self.docset_id = docset_id
+        self.year = year
+        self.task = task
+        self.docsets = docsets
+    
+    def update_iter(self):
+        for update_ds in self.docsets:
+            yield update_ds
 
 class DUCDocument(object):
     def __init__(self, doc_id, timestamp, path):
