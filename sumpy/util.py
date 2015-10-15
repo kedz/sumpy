@@ -33,12 +33,12 @@ class DUCHelper(object):
                         docset_id, 2003, 2,
                         docsets[docset_id]["inputs"],
                         os.path.join(
-                            self.sumpy_data_path, "2003", "task2", docset_id,
-                            "inputs"),
+                            self.sumpy_data_path, "duc2003", "task2", 
+                            docset_id, "inputs"),
                         docsets[docset_id]["models"],
                         os.path.join(
-                            self.sumpy_data_path, "2003", "task2", docset_id,
-                            "models"))
+                            self.sumpy_data_path, "duc2003", "task2", 
+                            docset_id, "models"))
 
                     yield ds
 
@@ -56,12 +56,12 @@ class DUCHelper(object):
                         docset_id, 2004, 2,
                         docsets[docset_id]["inputs"],
                         os.path.join(
-                            self.sumpy_data_path, "2004", "task2", docset_id,
-                            "inputs"),
+                            self.sumpy_data_path, "duc2004", "task2", 
+                            docset_id, "inputs"),
                         docsets[docset_id]["models"],
                         os.path.join(
-                            self.sumpy_data_path, "2004", "task2", docset_id,
-                            "models"))
+                            self.sumpy_data_path, "duc2004", "task2", 
+                            docset_id, "models"))
 
                     yield ds
 
@@ -97,6 +97,19 @@ class DUCHelper(object):
         else:
             raise Exception("Bad argument: year is {}".format(year))
 
+    def docsets(self, year, task):
+        if year == 2003:
+            if task == 2:
+                return DUCDocsets([ds for ds in self.docset_iter(2003, 2)])
+            else:
+                raise Exception("Bad argument: task is {}".format(task))
+        elif year == 2004:
+            if task == 2:
+                return DUCDocsets([ds for ds in self.docset_iter(2004, 2)])
+            else:
+                raise Exception("Bad argument: task is {}".format(task))
+        else:
+            raise Exception("Bad argument: year is {}".format(year))
 
     def install(self, year, task):
         if year == 2001:
@@ -340,6 +353,12 @@ class DUCHelper(object):
         shutil.rmtree("DUC2001_Summarization_Documents")
         shutil.rmtree(documents_path)
 
+class DUCDocsets(object):
+    def __init__(self, docsets):
+        self._docsets = {ds.docset_id: ds for ds in docsets}
+
+    def __getitem__(self, ds_id):
+        return self._docsets[ds_id]
 
 class DUCDocset(object):
     def __init__(self, docset_id, year, task, inputs, input_root, 
