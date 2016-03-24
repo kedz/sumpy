@@ -176,28 +176,29 @@ class DUCHelper(object):
                             {"model id": model_id,
                              "text": text})
 
-        annotators=["tokenize", "ssplit"]
-        with cnlp.Server(annotators=annotators) as pipeline:
-            for docset_id, docset in docsets.items():
-                inputs_path = os.path.join(data_path, docset_id, "inputs")
-                if not os.path.exists(inputs_path):
-                    os.makedirs(inputs_path)
-                for input in docset["inputs"]:
-                    input_path = os.path.join(inputs_path, input["input id"])
-                    with open(input_path, "wb") as f:
-                        f.write(input["text"])
-       
-                models_path = os.path.join(data_path, docset_id, "models")
-                if not os.path.exists(models_path):
-                    os.makedirs(models_path)
-                for model in docset["models"]:
-                    model_path = os.path.join(models_path, model["model id"])
-                    doc = pipeline.annotate(model["text"])
+        #annotators=["tokenize", "ssplit"]
+        #with cnlp.Server(annotators=annotators) as pipeline:
+        for docset_id, docset in docsets.items():
+            inputs_path = os.path.join(data_path, docset_id, "inputs")
+            if not os.path.exists(inputs_path):
+                os.makedirs(inputs_path)
+            for input in docset["inputs"]:
+                input_path = os.path.join(inputs_path, input["input id"])
+                with open(input_path, "wb") as f:
+                    f.write(input["text"])
+   
+            models_path = os.path.join(data_path, docset_id, "models")
+            if not os.path.exists(models_path):
+                os.makedirs(models_path)
+            for model in docset["models"]:
+                model_path = os.path.join(models_path, model["model id"])
+                #doc = pipeline.annotate(model["text"])
 
-                    with open(model_path, "wb") as f:
-                        for sent in doc:
-                            line = " ".join([str(tok) for tok in sent]) + "\n"
-                            f.write(line)
+                with open(model_path, "wb") as f:
+                    f.write(model["text"])
+                    #for sent in doc:
+                    #    line = " ".join([str(tok) for tok in sent]) + "\n"
+                    #    f.write(line)
 
 
     def _install_duc04_task2(self):
@@ -249,109 +250,111 @@ class DUCHelper(object):
                         {"model id": model_id,
                          "text": text})
 
-        annotators=["tokenize", "ssplit"]
-        with cnlp.Server(annotators=annotators) as pipeline:
-            for docset_id, docset in docsets.items():
-                inputs_path = os.path.join(data_path, docset_id, "inputs")
-                if not os.path.exists(inputs_path):
-                    os.makedirs(inputs_path)
-                for input in docset["inputs"]:
-                    input_path = os.path.join(inputs_path, input["input id"])
-                    with open(input_path, "wb") as f:
-                        f.write(input["text"])
-       
-                models_path = os.path.join(data_path, docset_id, "models")
-                if not os.path.exists(models_path):
-                    os.makedirs(models_path)
-                for model in docset["models"]:
-                    model_path = os.path.join(models_path, model["model id"])
-                    doc = pipeline.annotate(model["text"])
+        #annotators=["tokenize", "ssplit"]
+        #with cnlp.Server(annotators=annotators) as pipeline:
+        for docset_id, docset in docsets.items():
+            inputs_path = os.path.join(data_path, docset_id, "inputs")
+            if not os.path.exists(inputs_path):
+                os.makedirs(inputs_path)
+            for input in docset["inputs"]:
+                input_path = os.path.join(inputs_path, input["input id"])
+                with open(input_path, "wb") as f:
+                    f.write(input["text"])
+   
+            models_path = os.path.join(data_path, docset_id, "models")
+            if not os.path.exists(models_path):
+                os.makedirs(models_path)
+            for model in docset["models"]:
+                model_path = os.path.join(models_path, model["model id"])
+                
+                #doc = pipeline.annotate(model["text"])
 
-                    with open(model_path, "wb") as f:
-                        for sent in doc:
-                            line = " ".join([str(tok) for tok in sent]) + "\n"
-                            f.write(line)
+                with open(model_path, "wb") as f:
+                    f.write(model["text"])
+                    #for sent in doc:
+                    #    line = " ".join([str(tok) for tok in sent]) + "\n"
+                    #    f.write(line)
 
 
         
 
-    def _install_duc01_task2(self):
-
-        data_path = os.path.join(self.sumpy_data_path, "duc2001", "task2")
-        if not os.path.exists(data_path):
-            os.makedirs(data_path)
-        data_path_duc = os.path.join(
-            self.duc_path, "DUC2001_Summarization_Documents.tgz") 
-        
-        if not os.path.exists(data_path_duc):
-            raise Exception("{} does not exist. " \
-                            "Please obtain this file from NIST.".format(
-                                data_path_duc))
-                            
-        docments_tar_path = os.path.join("DUC2001_Summarization_Documents", 
-            "data", "testtraining", "Duc2001testtraining.tar.gz")
-
-        with tarfile.open(name=data_path_duc, mode="r") as tf:
-            mem_documents_tar = [m for m in tf.getmembers()
-                                 if m.name == docments_tar_path]
-            tf.extractall(members=mem_documents_tar) 
-        documents_tar_path = os.path.join(
-            "DUC2001_Summarization_Documents", "data", "testtraining",
-            "Duc2001testtraining.tar.gz")
-
-        if not os.path.exists(documents_tar_path):
-            raise Exception("Failed to extract DUC 2001 documents!")
-
-        with tarfile.open(docments_tar_path, mode="r") as tf:
-            tf.extractall()
-
-        documents_path = "duc2002testtraining"
-        if not os.path.exists(documents_path):
-            raise Exception("Failed to extract DUC 2001 documents!")
-
-        docsets = {}
-        for docset_id in os.listdir(documents_path):
-            docset_path = os.path.join(documents_path, docset_id)
-            articles = []
-            for article_name in os.listdir(docset_path):
-                if article_name.startswith("ap"):
-                    year = 1900 + int(article_name[2:4])
-                    month = int(article_name[4:6])
-                    day = int(article_name[6:8])
-                    ts = datetime(year, month, day)
-                elif article_name.startswith("wsj"):
-                    year = 1900 + int(article_name[3:5])
-                    month = int(article_name[5:7])
-                    day = int(article_name[7:9])
-                    ts = datetime(year, month, day)
-                elif article_name.startswith("la"):
-                    year = 1900 + int(article_name[6:8])
-                    month = int(article_name[2:4])
-                    day = int(article_name[4:6])
-                    ts = datetime(year, month, day)
-                elif article_name.startswith("ft"):
-                    year = 1900 + int(article_name[2:4])
-                    month = int(article_name.split("-")[0][4:])
-                    ts = datetime(year, month, 1)
-                elif article_name.startswith("fbis"):
-                    ts = datetime(1977,1,1)
-                elif article_name.startswith("sjmn"):
-                    ts = datetime(91,1,1)
-                else:
-                    raise Exception("Found unsual file here {}".format(
-                        article_name))
-                print article_name, ts
-                article_path = os.path.join(
-                    docset_path, article_name, "{}.body".format(article_name))
-                with open(article_path, "rb") as f:
-                    content = f.read()
-                articles.append({"input id": article_name, 
-                                  "raw text": content,
-                                  "timestamp": ts})
-            docsets[docset_id] = articles
-
-        shutil.rmtree("DUC2001_Summarization_Documents")
-        shutil.rmtree(documents_path)
+#    def _install_duc01_task2(self):
+#
+#        data_path = os.path.join(self.sumpy_data_path, "duc2001", "task2")
+#        if not os.path.exists(data_path):
+#            os.makedirs(data_path)
+#        data_path_duc = os.path.join(
+#            self.duc_path, "DUC2001_Summarization_Documents.tgz") 
+#        
+#        if not os.path.exists(data_path_duc):
+#            raise Exception("{} does not exist. " \
+#                            "Please obtain this file from NIST.".format(
+#                                data_path_duc))
+#                            
+#        docments_tar_path = os.path.join("DUC2001_Summarization_Documents", 
+#            "data", "testtraining", "Duc2001testtraining.tar.gz")
+#
+#        with tarfile.open(name=data_path_duc, mode="r") as tf:
+#            mem_documents_tar = [m for m in tf.getmembers()
+#                                 if m.name == docments_tar_path]
+#            tf.extractall(members=mem_documents_tar) 
+#        documents_tar_path = os.path.join(
+#            "DUC2001_Summarization_Documents", "data", "testtraining",
+#            "Duc2001testtraining.tar.gz")
+#
+#        if not os.path.exists(documents_tar_path):
+#            raise Exception("Failed to extract DUC 2001 documents!")
+#
+#        with tarfile.open(docments_tar_path, mode="r") as tf:
+#            tf.extractall()
+#
+#        documents_path = "duc2002testtraining"
+#        if not os.path.exists(documents_path):
+#            raise Exception("Failed to extract DUC 2001 documents!")
+#
+#        docsets = {}
+#        for docset_id in os.listdir(documents_path):
+#            docset_path = os.path.join(documents_path, docset_id)
+#            articles = []
+#            for article_name in os.listdir(docset_path):
+#                if article_name.startswith("ap"):
+#                    year = 1900 + int(article_name[2:4])
+#                    month = int(article_name[4:6])
+#                    day = int(article_name[6:8])
+#                    ts = datetime(year, month, day)
+#                elif article_name.startswith("wsj"):
+#                    year = 1900 + int(article_name[3:5])
+#                    month = int(article_name[5:7])
+#                    day = int(article_name[7:9])
+#                    ts = datetime(year, month, day)
+#                elif article_name.startswith("la"):
+#                    year = 1900 + int(article_name[6:8])
+#                    month = int(article_name[2:4])
+#                    day = int(article_name[4:6])
+#                    ts = datetime(year, month, day)
+#                elif article_name.startswith("ft"):
+#                    year = 1900 + int(article_name[2:4])
+#                    month = int(article_name.split("-")[0][4:])
+#                    ts = datetime(year, month, 1)
+#                elif article_name.startswith("fbis"):
+#                    ts = datetime(1977,1,1)
+#                elif article_name.startswith("sjmn"):
+#                    ts = datetime(91,1,1)
+#                else:
+#                    raise Exception("Found unsual file here {}".format(
+#                        article_name))
+#                print article_name, ts
+#                article_path = os.path.join(
+#                    docset_path, article_name, "{}.body".format(article_name))
+#                with open(article_path, "rb") as f:
+#                    content = f.read()
+#                articles.append({"input id": article_name, 
+#                                  "raw text": content,
+#                                  "timestamp": ts})
+#            docsets[docset_id] = articles
+#
+#        shutil.rmtree("DUC2001_Summarization_Documents")
+#        shutil.rmtree(documents_path)
 
 class DUCDocsets(object):
     def __init__(self, docsets):
